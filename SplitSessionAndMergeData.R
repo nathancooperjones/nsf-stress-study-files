@@ -39,6 +39,8 @@ e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067')
 
+discarded_df <- tibble() 
+
 #-------------------------#
 #---FUNCTION DEFINITION---#
 #-------------------------#
@@ -162,7 +164,7 @@ convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, times
         df[i, timestamp[2]] <- df[i, timestamp[2]] + (12 * one_hour_sec) 
       } 
     } 
-    message(paste('Timestamps changed for subject', subj_name, '. ')) 
+    message(paste0('Timestamps changed for subject ', subj_name, '. ')) 
     flush.console() 
     return(df) 
     
@@ -284,10 +286,16 @@ splitSessions <- function(session_dir, subj_name) {
     
     if (!is.null(bad_sessions)) { 
       merged_df[merged_df$Session %in% bad_sessions, "HR"] <- NA 
-      write(paste0(subj_name, "'s HR signal for ", bad_sessions, " has been removed due to HR Confidence less than ", 
-                   heart_rate_confidence_threshold, "."), file = filtered_log.file, append=TRUE) 
+      specific_discarded_df <- tibble("Subject" = subj_name, "Session" = bad_sessions) 
+      
+      if (nrow(discarded_df) == 0) { 
+        discarded_df <<- specific_discarded_df 
+      } else { 
+        discarded_df <<- rbind(discarded_df, specific_discarded_df) 
+      } 
+      
       message(paste0(subj_name, " HR signal for ", bad_sessions, " has been removed due to HR Confidence less than ", 
-                     heart_rate_confidence_threshold, ".")) 
+                     heart_rate_confidence_threshold, ". // ")) 
     } 
     
     merged_df <- merged_df[ , (names(merged_df) != "HRConfidence")] 
@@ -394,8 +402,8 @@ splitSessionsForPP <- function() {
             # print(subj_name)
             splitSessions(session_dir, subj_name)
             
-            write(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFULL'), file=log.file, append=TRUE)
-            message(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFULL'))
+            write(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'), file=log.file, append=TRUE)
+            message(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'))
             
           } else {
             write(paste0(grp_name, '-', subj_name, '-', session_name, ': NOT PROCESSED'), file=log.file, append=TRUE)
@@ -405,11 +413,11 @@ splitSessionsForPP <- function() {
         },
         error=function(cond) {
           write('----------------------------------------------------------', file=log.file, append=TRUE)
-          write(paste0(grp_name, '-', subj_name, '-', session_name, ': ERROR!!'), file=log.file, append=TRUE)
+          write(paste0(grp_name, '-', subj_name, '-', session_name, ': ERROR!'), file=log.file, append=TRUE)
           write(paste0(cond, '\n'), file=log.file, append=TRUE)
           
           message('----------------------------------------------------------')
-          message(paste0(grp_name, '-', subj_name, '-', session_name, ': ERROR!!'))
+          message(paste0(grp_name, '-', subj_name, '-', session_name, ': ERROR!'))
           message(paste0(cond, '\n'))
         })
       })
@@ -424,11 +432,13 @@ splitSessionsForPP <- function() {
 current_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(current_dir)
 
+
 # CHANGE THIS 
 # source('~/Desktop/nsf-stress-project-files/@RemoveNoise.R') 
 # source('~/Desktop/nsf-stress-project-files/@DownSampleTimeStamp.R') 
 source('@RemoveNoise.R') 
 source('@DownSampleTimeStamp.R') 
+
 
 log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
@@ -440,3 +450,5 @@ file.create(filtered_log.file)
 
 copyReExtractedDataToNsfDir() 
 splitSessionsForPP() 
+
+convert_to_csv(discarded_df, "discarded_HR.csv") 
