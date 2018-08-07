@@ -424,8 +424,11 @@ splitSessionsForPP <- function() {
 current_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(current_dir)
 
-source('~/Desktop/nsf-stress-project-files/@RemoveNoise.R') 
-source('~/Desktop/nsf-stress-project-files/@DownSampleTimeStamp.R') 
+# CHANGE THIS 
+# source('~/Desktop/nsf-stress-project-files/@RemoveNoise.R') 
+# source('~/Desktop/nsf-stress-project-files/@DownSampleTimeStamp.R') 
+source('@RemoveNoise.R') 
+source('@DownSampleTimeStamp.R') 
 
 log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
@@ -434,11 +437,6 @@ file.create(log.file)
 filtered_log.file <- file.path(log_dir, paste0('split-sessions-filtered-subjects-', format(Sys.Date(), format='%m-%d-%y'), '.txt')) 
 file.create(filtered_log.file) 
 
+
 copyReExtractedDataToNsfDir() 
-
 splitSessionsForPP() 
-
-
-##########################################
-#                 DONE                   #
-##########################################
