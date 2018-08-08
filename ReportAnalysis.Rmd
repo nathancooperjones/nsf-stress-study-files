@@ -34,7 +34,7 @@ print_output <- function(output, cex = 0.7) {
 essay_df <- read_csv("essay_nlp_results.csv", col_types = cols()) 
 
 wb_essay_df <- essay_df %>% 
-  filter(Essay == "WB") 
+  filter(Report == "WB") 
 
 wb_essay_df %>% 
   ggplot(aes(x = Condition, y = WordCount)) + 
@@ -75,7 +75,7 @@ print_output(TukeyHSD(anova_test))
 cat("  \n  ") 
 
 dt_essay_df <- essay_df %>% 
-  filter(Essay == "DT") 
+  filter(Report == "DT") 
 
 dt_essay_df %>% 
   ggplot(aes(x = Condition, y = WordCount)) + 

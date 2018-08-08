@@ -1,0 +1,18 @@
+Group1-T003-SuperSession: SUCCESSFUL
+Group1-T005-SuperSession: SUCCESSFUL
+Group1-T006-SuperSession: SUCCESSFUL
+Group1-T009-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group1-T011-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+Group1-T016-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group1-T017-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group1-T019-SuperSession: SUCCESSFUL
+Group1-T021-SuperSession: SUCCESSFUL
+Group1-T031-SuperSession: SUCCESSFUL

@@ -39,7 +39,12 @@ e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067')
 
-discarded_df <- tibble() 
+if (length(discarded_subj_list) > 0) { 
+  discarded_df <- tibble("Subject" = discarded_subj_list, 
+                         "Session" = c("RestingBaseline", "WritingBaseline", "StressCondition", "DualTask", "Presentation"), 
+                         "Measure" = "ALL", 
+                         "Explaination" = "Stopped halfway through") 
+} 
 
 #-------------------------#
 #---FUNCTION DEFINITION---#
@@ -286,7 +291,7 @@ splitSessions <- function(session_dir, subj_name) {
     
     if (!is.null(bad_sessions)) { 
       merged_df[merged_df$Session %in% bad_sessions, "HR"] <- NA 
-      specific_discarded_df <- tibble("Subject" = subj_name, "Session" = bad_sessions) 
+      specific_discarded_df <- tibble("Subject" = subj_name, "Session" = bad_sessions, "Measure" = "HR", Explaination = "HR Confidence") 
       
       if (nrow(discarded_df) == 0) { 
         discarded_df <<- specific_discarded_df 
@@ -429,15 +434,14 @@ splitSessionsForPP <- function() {
 #-------------------------#
 #-------Main Program------#
 #-------------------------#
-current_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
-setwd(current_dir)
-
-
 # CHANGE THIS 
-# source('~/Desktop/nsf-stress-project-files/@RemoveNoise.R') 
-# source('~/Desktop/nsf-stress-project-files/@DownSampleTimeStamp.R') 
-source('@RemoveNoise.R') 
-source('@DownSampleTimeStamp.R') 
+source('~/Desktop/nsf-stress-study-files/@RemoveNoise.R') 
+source('~/Desktop/nsf-stress-study-files/@DownSampleTimeStamp.R') 
+#source('@RemoveNoise.R') 
+#source('@DownSampleTimeStamp.R') 
+# current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
+# setwd(current_dir) 
+setwd("~/Desktop/") 
 
 
 log_dir <- file.path(current_dir, 'log-files')
