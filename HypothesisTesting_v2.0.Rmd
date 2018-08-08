@@ -236,10 +236,10 @@ plot1 <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + # adds the horizontal line 
               theme_bw() + # makes the theme white and black instead of with a gray background 
               ggtitle(figure_out_special_title(comp, condition)) + # get the special title for the graph 
-              ylab("Difference") + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + # make sure there is no text on the x-axis 
               stat_summary(fun.data = give.n, geom = "text") + # add the number of observations to each boxplot 
-              scale_x_discrete(labels=c("ln(PP)")) + # make sure we have the right label for this specific graph 
+              scale_x_discrete(labels=c(" ")) + # make sure we have the right label for this specific graph 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + # we expand the limits of the y-axis so the 
                                                                 # '*' characters don't interfere with points. 
               annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1]))  # and we add the '*' character for the exact 
@@ -257,10 +257,10 @@ plot1 <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("ln(D.EDA)", "ln(N.EDA)")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
               annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
@@ -276,7 +276,7 @@ plot1 <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~bar(" . "))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
@@ -376,10 +376,10 @@ plot1_dt <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
               theme_bw() + 
               ggtitle(figure_out_special_title(comp, condition)) + 
-              ylab("Difference") + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("ln(PP)")) + 
+              scale_x_discrete(labels=c(" ")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1])) 
             
@@ -393,10 +393,10 @@ plot1_dt <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("ln(D.EDA)", "ln(N.EDA)")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
               annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
@@ -411,7 +411,7 @@ plot1_dt <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~bar(" . "))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
@@ -509,10 +509,10 @@ plot1_p <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
               theme_bw() + 
               ggtitle(figure_out_special_title(comp, condition)) + 
-              ylab("Difference") + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("ln(PP)")) + 
+              scale_x_discrete(labels=c(" ")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1])) 
             
@@ -526,10 +526,10 @@ plot1_p <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("ln(D.EDA)", "ln(N.EDA)")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
               annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
@@ -544,7 +544,7 @@ plot1_p <- function(condition) {
               geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
               theme_bw() + 
               ggtitle(" ") + 
-              ylab("Difference") +
+              ylab(expression(Delta~bar(" . "))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
@@ -1025,13 +1025,13 @@ interpret_results_after <- function(cond, col) {
 # You should be used to this by now... 
 figure_out_labels <- function(col_name) { 
   if (isMatch(col_name, 'PP')) { 
-    return(bquote(paste('Perinasal Perspiration [',''^'o','C',''^2,']'))) 
+    return(expression(Delta~paste('Perinasal Perspiration [',''^'o','C',''^2,']'))) 
   } else if (isMatch(col_name, 'HR')) { 
-    return('Heart Rate [BPM]') 
+    return(expression(Delta~'Heart Rate [BPM]')) 
   } else if (isMatch(col_name, 'BR')) { 
-    return('Breathing Rate [BPM]') 
+    return(expression(Delta~'Breathing Rate [BPM]')) 
   } else if (isMatch(col_name, 'EDA')) { 
-    return(expression(paste('EDA [', mu, 'S]'))) 
+    return(expression(Delta~'EDA ['~mu~'S]')) 
   } 
   return('Unknown axis.') 
 } 
@@ -1083,7 +1083,7 @@ mess_with_the_columns()
 \newpage  
 # Intermittent-High (IH) 
 \newpage  
-## Sensor Channels per Session ## 
+## Sensor Channels per Activity ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 measure_vec <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
@@ -1118,7 +1118,7 @@ plot1_p(cond)
 ``` 
 
 \newpage 
-## Sensor Channel across Session ## 
+## Sensor Channel across Activities ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 # Okay, great. So we know that `test_time` will return a list when specified to, so now we finally get to see what this list does! 
@@ -1141,7 +1141,7 @@ for (col in measure_vec) {
 \newpage  
 # Intermittent-Low (IL) 
 \newpage  
-## Sensor Channels per Session ## 
+## Sensor Channels per Activity ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 # Now we can kind of sit back and relax while we rinse and repeat for each condition. 
@@ -1160,7 +1160,7 @@ plot1_p(cond)
 ``` 
 
 \newpage 
-## Sensor Channel across Session ## 
+## Sensor Channel across Activities ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 for (col in measure_vec) { 
@@ -1176,7 +1176,7 @@ for (col in measure_vec) {
 \newpage  
 # Batch-High (BH) 
 \newpage  
-## Sensor Channels per Session ## 
+## Sensor Channels per Activity ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 cond <- "BH" 
@@ -1194,7 +1194,7 @@ plot1_p(cond)
 ``` 
 
 \newpage  
-## Sensor Channel across Session ## 
+## Sensor Channel across Activities ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 for (col in measure_vec) { 
@@ -1210,7 +1210,7 @@ for (col in measure_vec) {
 \newpage  
 # Batch-Low (BL) 
 \newpage  
-## Sensor Channels per Session 
+## Sensor Channels per Activity 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 cond <- "BL" 
@@ -1228,7 +1228,7 @@ plot1_p(cond)
 ``` 
 
 \newpage 
-## Sensor Channel across Session 
+## Sensor Channel across Activities 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
 for (col in measure_vec) { 
@@ -1239,6 +1239,135 @@ for (col in measure_vec) {
     plot.new() 
   } 
 } 
+``` 
+
+\newpage  
+# Across Activities 
+\newpage  
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# Now as if this script couldn't get more complicated, now we get to run ANOVA for some session differences and even 
+# throw in the Stroop scores for some of them. How fun. 
+# So below are the sessions we will be generating the ANOVA and respective plots for, that is, in `diff_vec`. 
+diff_vec <- c("WB.RB", "SC.RB", "DT.RB", "P.RB") 
+# And we only do the ANOVA for the following measurements since all the other ones are poor and messy - gross! 
+measure_vec <- c("PP", "HR", "BR") 
+# Here we specify the minimum score threshold to recieve on the Stroop test to be considered valid and that you actually tried. 
+score_threshold <- 30 
+
+# Okay, let's loop over everything and get this over with. 
+for (diff in diff_vec) { 
+  for (measure in measure_vec) { 
+  
+    # Let's make sure we adjust the measure label for PP to indicate that we indeed log it. 
+    measure_label <- measure 
+    if (measure == "PP") { 
+      measure_label <- paste0("ln(", measure, ")") 
+    } 
+    
+    # We make a new tibble to hold everything, yay for variously random tibble initializations! 
+    anova_df <- tibble() 
+    bad_subjects <- NULL # this is important for a little bit later on - you'll see! 
+    # If we have a Stress Condition subject, we will eventually plot a scatterplot with the various Stroop scores vs. 
+    # the associated measurement values. How fun! 
+    # But first, we got to figure out who did well on the Stroop test and who did poorly. 
+    if (isMatch(diff, "SC")) { 
+      
+      # No NA scores allowed! Sorry, NA! 
+      stroop_df <- stroop_df %>% 
+        filter(!is.na(Score)) 
+      
+      # Only good scores allowed! Sorry, bad scores! 
+      filtered_stroop_df <- stroop_df %>% 
+        filter(Score < score_threshold) 
+      
+      # What subjects scored too low? 
+      bad_subjects <- filtered_stroop_df$Subject 
+      # Whatever subjects they were, they get filtered out here to create a better anova_df for us that is way more specific 
+      # for our purposes right here! 
+      anova_df <- session_compare_df[c("Condition", "Measurement", "Subject", diff)] %>% 
+        filter(Measurement == measure) %>% 
+        na.omit() %>% 
+        filter(!(Subject %in% bad_subjects)) 
+      
+    } else { 
+      anova_df <- session_compare_df[c("Condition", "Measurement", diff)] %>% 
+        filter(Measurement == measure) %>% 
+        na.omit() 
+    } 
+    
+    # We specify the order for our conditions. 
+    condition_vec <- c("IH", "BH", "IL", "BL") 
+    
+    # And everything in this plotting command should be pretty self-explanatory... Nothing too crazy here. 
+    print(anova_df %>% 
+      ungroup(Condition) %>% 
+      mutate(Condition = factor(Condition, levels = condition_vec)) %>% 
+      group_by(Condition) %>% 
+      ggplot(aes_string(x = "Condition", y = diff)) + 
+        geom_boxplot() + 
+        theme_bw() + 
+        geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+        theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+        labs(title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+             y = figure_out_labels(measure)) + 
+        stat_summary(fun.y = mean, color = "darkred", geom = "point", shape = 3, size = 2, show_guide = FALSE) + 
+        stat_summary(fun.data = give.n, geom = "text") + 
+        scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+    ) 
+    
+    # We are so nice and informative that we even let the reader know how many subjects we removed! How nice of us! 
+    if (isMatch(diff, "SC") & !is.null(bad_subjects)) { 
+      print(paste0("Removed ", length(bad_subjects), " subjects who had Stroop scores less than ", score_threshold, ".")) 
+      cat("  \n---  \n  ") 
+    } 
+    
+    # Now let's run the ANOVA already and print out the results! 
+    cat("ANOVA:\n") 
+    anova_test <- aov(formula(paste(diff, "~ Condition")), data = anova_df) 
+    print(summary(anova_test)) 
+    cat("  \n---  \n\n  ") 
+    print(TukeyHSD(anova_test)) 
+      
+    # # Now it's finally time to print out that scatterplot with the Stroop scores vs. the measurement values I talked all about earlier! 
+    # # LINEAR MODELLING TIME! 
+    # if (isMatch(diff, "SC") & measure != "BR") { 
+    #   
+    #     # We make a very fun tibble, again! How very specialized! 
+    #     sc_df <- session_compare_df[c("Condition", "Measurement", "Subject", diff)] %>% 
+    #         filter(Measurement == measure) %>% 
+    #         filter(Condition == "BH") %>% 
+    #         na.omit() 
+    #     # Merge it with the Stroop scores so we actually know what to plot. 
+    #     sc_df <- merge(sc_df, stroop_df, by = "Subject") 
+    #     
+    #     # How many subjects do we have now? 
+    #     n <- nrow(sc_df) 
+    #     
+    #     # Easy town! 
+    #     print(sc_df %>% 
+    #       ggplot(aes_string(x = "Score", y = diff)) + 
+    #         geom_point() + 
+    #         theme_bw() + 
+    #         labs(title = paste0(gsub(".", " - ", diff, fixed = TRUE), " vs. Stroop Scores for ", measure_label, ": BH"), 
+    #              subtitle = bquote(list(italic('n')==.(n))), 
+    #              x = "Stroop Score", 
+    #              y = "Difference") + 
+    #         # Because we are so nice, we put in a linear approximation line so we can tell the general trend of the points. Fun, no? 
+    #         stat_smooth(geom = 'line', method = lm, alpha = 0.4, se = FALSE) 
+    #     ) 
+    #     
+    #     # And sure, why not, we even run a linear approximation test and print out the results. How nice of us! 
+    #     cat("LINEAR MODELLING: \n")  
+    #     linear_model <- lm(formula(paste(diff, "~ Score")), data = sc_df) 
+    #     print(summary(linear_model)) 
+    # } 
+  } 
+} 
+
+# Ah, finally done now! Whew! 
+
 ``` 
 
 \newpage 

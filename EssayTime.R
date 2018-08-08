@@ -17,7 +17,9 @@ library(grid)
 library(gridExtra) 
 library(cowplot) 
 
-
+# CHANGE THIS! 
+# Point this to the nsf-stress-study directory. 
+setwd("~/Desktop/")
 data_dir <- 'nsf-stress-study' 
 super_session_pattern <- '^SuperSession$' 
 plots <- list() 
@@ -142,10 +144,10 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
   essay_total <- (50 * 60) - emails_total 
   
   df <- tibble("Writing" = "Emails", "Time" = emails_total) 
-  df <- rbind(df, tibble("Writing" = "Essay", "Time" = essay_total)) 
+  df <- rbind(df, tibble("Writing" = "Report", "Time" = essay_total)) 
   
   # result_df <<- rbind(result_df, tibble("Subject" = subj_name, "Condition" = condition, 
-  #                                       "Essay" = "DT", "Positive" = dual_task_positive_count, 
+  #                                       "Report" = "DT", "Positive" = dual_task_positive_count, 
   #                                       "Neutral" = dual_task_neutral_count, 
   #                                       "Negative" = dual_task_negative_count, 
   #                                       "WordCount" = dual_task_words, 
@@ -153,7 +155,7 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
   
   ## PLOTTING 
   g1 <- df %>% 
-    mutate(Writing = factor(Writing, levels = c("Emails", "Essay"))) %>% 
+    mutate(Writing = factor(Writing, levels = c("Emails", "Report"))) %>% 
     ggplot(aes(x = Writing, y = Time)) + 
       geom_col() + 
       labs(title = paste0("Writing Times for ", subj_name), 

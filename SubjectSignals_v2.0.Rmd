@@ -1,5 +1,5 @@
 ---
-title: "Sensor Channel per Subject - All Sessions" 
+title: "Sensor Channel per Subject - All Activities" 
 output: pdf_document 
 geometry: "top=3.5cm, bottom=3cm" 
 ---
@@ -24,7 +24,7 @@ extrafont::loadfonts(quiet=TRUE)
 
 # CHANGE THIS 
 # You should know the drill by now. 
-full_df <- read_csv("~/Desktop/full_df.csv", col_types = cols()) 
+full_df <- read_csv("full_df.csv", col_types = cols()) 
 
 # Don't make me say it. 
 isMatch <- function(pattern, str) { 
@@ -73,6 +73,7 @@ graph_for_subjects <- function(df, subj_name, condition, n) {
   
   session_vec <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation") 
   df$Session <- factor(df$Session, levels = session_vec) 
+  levels(df$Session) <- c("RestingBaseline", "SingleTask", "Break", "DualTask", "Presentation") 
   
   if (nrow(df) < 4) { 
     message(paste0("Dataframe for subject ", subj_name, " is empty. ")) 
@@ -128,7 +129,7 @@ do_the_actual_plotting_now <- function(df, subj_name, condition, col_name, n) {
     if (n == 3) { 
       temp_df <- df %>% 
         group_by(Session) %>% 
-        filter(Session %in% c('RestingBaseline', 'BaselineWriting', 'DualTask')) %>% 
+        filter(Session %in% c('RestingBaseline', 'SingleTask', 'DualTask')) %>% 
         mutate(TimeElapsed = as.integer(CovertedTime) - as.integer(head(CovertedTime, 1))) %>% 
         na.omit() 
     } else if (n == 5) { 
@@ -147,10 +148,10 @@ do_the_actual_plotting_now <- function(df, subj_name, condition, col_name, n) {
     if ("RestingBaseline" %in% temp_df$Session) { 
       colors <- c(colors, "#000000") 
     } 
-    if ("BaselineWriting" %in% temp_df$Session) { 
+    if ("SingleTask" %in% temp_df$Session) { 
       colors <- c(colors, "#0082C8") 
     } 
-    if ("StressCondition" %in% temp_df$Session) { 
+    if ("Break" %in% temp_df$Session) { 
       colors <- c(colors, "#F58231") 
     } 
     if ("DualTask" %in% temp_df$Session) { 
