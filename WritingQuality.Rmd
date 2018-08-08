@@ -11,12 +11,12 @@ header-includes:
 --- 
 
 \newpage 
-Linear Modelling for Criterion Score 
+Linear Modelling for Normalized Error (Word Count) 
 ----- 
 
 Our Linear Model: 
 $$ 
- Writing Quality = 1 + Group + Session + 1|Subject 
+ Normalized Error_{Word Count} = 1 + Group + Session + 1|Subject 
 $$ 
 
 ----- 
@@ -34,13 +34,13 @@ library(scales)
 library(wesanderson) 
 
 # READING IN CSV FILES 
-result_df <- read_csv("~/Desktop/testing_df.csv", col_types = cols()) 
+result_df <- read_csv("testing_df.csv", col_types = cols()) 
 result_df <- result_df %>% 
   mutate(Condition = factor(Condition, levels = c("BL", "IL", "BH", "IH"))) %>% 
   filter(Measurement == "PP") 
 colnames(result_df)[which(names(result_df) == "Condition")] <- "Group" 
 
-essay_score_df <- read_csv("~/Desktop/essay_score_master_file.csv", col_types = cols()) 
+essay_score_df <- read_csv("essay_score_master_file.csv", col_types = cols()) 
 names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
                            "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
 essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
@@ -51,7 +51,7 @@ essay_score_df <- essay_score_df %>%
   mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
   mutate(Session = factor(Session, levels = c("WB", "DT"))) 
 
-nlp_df <- read_csv("~/Desktop/essay_nlp_results.csv", col_types = cols()) 
+nlp_df <- read_csv("essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
 colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
 
@@ -65,53 +65,6 @@ full_nlp_df <- full_nlp_df %>%
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
 
-# CREATING LINEAR MODELS 
-fit_writing_quality <- lme(Score ~ 1 + Group + Session, data = full_df, random = ~1|Subject, na.action = na.omit) 
-
-# SUMMARIZING LINEAR MODEL 
-print(summary(fit_writing_quality)) 
-
-full_df <- full_df %>% 
-  mutate(Group = factor(Group, levels = c("IH", "IL", "BH", "BL"))) 
-
-levels(full_df$Group) <- c("IF", "IR", "BF", "BR") 
-
-full_df %>% 
-  ggplot(aes(x = Group, y = Score, fill = Session)) + 
-    geom_boxplot() + 
-    theme_bw() + 
-    ggtitle(" ") + 
-    ylab("ETS Score") + 
-    theme(axis.title.x=element_blank(), 
-          axis.text = element_text(size=14), 
-          axis.title = element_text(size=16), 
-          legend.position = "bottom") + 
-    scale_y_continuous(breaks = pretty_breaks(n = 7)) + 
-    scale_fill_manual(labels = c("ST", "DT"), values = c("#00FFFF", "#007FFF")) 
-
-full_df <- full_df %>% 
-  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
-
-full_df_n_only <- full_df %>% 
-  group_by(Session, Group) %>% 
-  summarize(n = n()) 
-
-kable(full_df_n_only, format = "latex", longtable = TRUE) %>% 
-  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
-
-``` 
-
-\newpage 
-Linear Modelling for Normalized Error (Word Count) 
------ 
-
-Our Linear Model: 
-$$ 
- Normalized Error_{Word Count} = 1 + Group + Session + 1|Subject 
-$$ 
-
------ 
-```{r echo = FALSE, warning = FALSE, message = FALSE} 
 # CREATING LINEAR MODEL 
 fit_normalized_errors_wc <- lme(NormalizedErrorWC ~ 1 + Group + Session, data = full_nlp_df, random = ~1|Subject, na.action = na.omit) 
 

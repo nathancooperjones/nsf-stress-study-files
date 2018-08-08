@@ -276,18 +276,27 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       # Go ahead and add additional subjects, measurements, and sessions that you want to filter out because they are so bad. 
       # Why not! 
       # Subject out of frame 
-      if (col_name == "PP" & sess == "StressCondition") { 
+      if (col_name == "PP" & sess == "StressCondition" & condition == "BH") { 
         bad_subjects <- c(bad_subjects, "T078") 
       } 
       # Subject out of frame 
-      if (col_name == "PP" & sess == "DualTask") { 
+      if (col_name == "PP" & condition == "IL") { 
         bad_subjects <- c(bad_subjects, "T153") 
       } 
-      if (col_name == "PP") { 
-        bad_subjects <- c(bad_subjects, "T153") 
+      if (col_name == "PP" & condition == "BH") { 
+        bad_subjects <- c(bad_subjects, "T080") 
       } 
       if (col_name == "PP") { 
-        bad_subjects <- c(bad_subjects, "T080", "T081") 
+        bad_subjects <- c(bad_subjects, "T081") 
+      } 
+      if (col_name == "PP" & condition == "IH") { 
+        bad_subjects <- c(bad_subjects, "T126") 
+      } 
+      if (col_name == "PP" & sess == "StressCondition" & condition == "IH") { 
+        bad_subjects <- c(bad_subjects, "T064") 
+      } 
+      if (col_name == "PP" & condition == "IL") { 
+        bad_subjects <- c(bad_subjects, "T097") 
       } 
       
       # And here is the execution, first for out temporary dataframe for plotting... 
@@ -494,10 +503,16 @@ for (subject in subj_list) {
 
 # Now we re-order the columns to an appropriate order... 
 result_df <- result_df[ , c("Subject", "Condition", "Session", "CovertedTime", "TimeElapsed", "PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR", "Task")] 
+emails_df <- emails_df[ , c("Subject", "Email.1.Open.Email.Time", "Email.2.Open.Email.Time", "Email.3.Open.Email.Time", "Email.4.Open.Email.Time", 
+                           "Email.5.Open.Email.Time", "Email.6.Open.Email.Time", "Email.7.Open.Email.Time", "Email.8.Open.Email.Time", 
+                           "Email.1.Ending.Time", "Email.2.Ending.Time", "Email.3.Ending.Time", "Email.4.Ending.Time", "Email.5.Ending.Time", 
+                           "Email.6.Ending.Time", "Email.7.Ending.Time", "Email.8.Ending.Time")] 
+
 # Last but not least, we write this big ol' global tibble to a .csv file so we can access it for every other script we have to run! 
 write.table(result_df, file = "full_df.csv", row.names=F, sep = ',') 
 # We also write this email dataframe for someone to look at later - who knows?! 
 write.table(emails_df, file = "email_df.csv", row.names=F, sep = ',') 
+
 ``` 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
@@ -557,6 +572,10 @@ for (subj_name in levels(factor(subject_summary$Subject))) {
     } 
   } 
 } 
+
+subjects_we_filtered <- subjects_we_filtered %>% 
+  mutate(Session = factor(Session, levels = c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation"))) %>% 
+  arrange(Session) 
 
 # And then, just for kicks, we write THESE dataframes to .csv files too because why not overflow the reader with TOO much information! 
 write.table(subject_summary, file = "subject_summary.csv", row.names=F, sep = ',') 
