@@ -1,0 +1,1266 @@
+--- 
+title: "Advanced Analysis" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+--- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+library(tidyverse) 
+library(knitr) 
+library(grid) 
+library(gridExtra) 
+library(kableExtra) 
+library(nlme) 
+library(wesanderson) 
+library(stringi) 
+library(scales) 
+
+# READING IN CSV FILES 
+testing_df <- read_csv("~/Desktop/nsf-stress-study-files/testing_df.csv", col_types = cols()) 
+testing_df <- testing_df %>% 
+  mutate(Condition = factor(Condition, levels = c("BL", "IL", "BH", "IH"))) 
+colnames(testing_df)[which(names(testing_df) == "Condition")] <- "Group" 
+
+age_df <- read_csv("~/Desktop/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
+age_df <- age_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
+names(age_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
+
+full_no_changing_df <- read_csv("~/Desktop/nsf-stress-study-files/full_df.csv", col_types = cols()) 
+
+``` 
+
+# PP, 4 Groups: 
+
+\newpage 
+## Stress Levels Across Activities 
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Group + Activity + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# MERGING CSV FILES 
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, PP, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("WB.RB", "SC.RB", "DT.RB", "P.RB")) %>% 
+  filter(Measurement == "PP") 
+levels(diff_df$Session) <- c("WB", "SC", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# diff_df <- merge(diff_df, age_df, by = "Subject") 
+
+# CREATING LINEAR MODELS 
+fit3_diff <- lme(PP ~ 1 + Group + Session, data = diff_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit3_diff)) 
+
+``` 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# Okay, let's loop over everything and get this over with. 
+diff1 <- "WB.RB" 
+diff2 <- "DT.RB" 
+diff3 <- "P.RB" 
+measure <- "PP" 
+
+# Let's make sure we adjust the measure label for PP to indicate that we indeed log it. 
+measure_label <- measure 
+if (measure == "PP") { 
+  measure_label <- paste0("ln(", measure, ")") 
+} 
+
+anova_df <- tibble() 
+anova_df <- testing_df[c("Subject", "Group", "Measurement", diff1, diff2, diff3)] %>% 
+  filter(Measurement == measure) %>% 
+  na.omit() 
+
+anova_df <- anova_df %>% 
+  gather(Measure, Difference, -Subject, -Group, -Measurement) %>% 
+  mutate(Measure = factor(Measure, levels = c(diff1, diff2, diff3))) 
+
+# We specify the order for our conditions. 
+condition_vec <- c("IH", "BH", "IL", "BL") 
+
+print(anova_df %>% 
+  ungroup(Group) %>% 
+  mutate(Group = factor(Group, levels = c("IH", "IL", "BH", "BL"))) %>% 
+  group_by(Group) %>% 
+  ggplot(aes(x = Group, y = Difference, fill = Measure), color = "black") + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_fill_manual(labels = c("ST", "DT", "P"), values = c("#04BA39", "#FFAE42", "#F8766D")) + 
+    scale_x_discrete(labels = c("IF", "IR", "BF", "BR")) 
+) 
+
+cat("\n  \n  \n") 
+
+print(anova_df %>% 
+  ungroup(Group) %>% 
+  mutate(Group = factor(Group, levels = condition_vec)) %>% 
+  group_by(Group) %>% 
+  ggplot(aes(x = Measure, y = Difference, fill = Group)) + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+    scale_x_discrete(labels = c("SingleTask", "DualTask", "Presentation")) + 
+    scale_fill_manual(labels = c("IF", "IR", "BF", "BR"), values = wes_palette("Darjeeling1")) 
+) 
+
+``` 
+
+\newpage 
+## Stress Levels for Dual Task 
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Group + Dual Task + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+give.n.half <- function(x) { 
+  return(c(y=-Inf, vjust = -1, label=length(x) / 2)) 
+} 
+
+give.n <- function(x) { 
+  return(c(y=-Inf, vjust = -1, label=length(x))) 
+} 
+
+interpret_results <- function(p_value) { 
+  if (p_value > 0.05) { 
+    return(" ") 
+  } else if (p_value <= 0.001) { 
+    return("***") 
+  } else if (p_value <= 0.01) { 
+    return("**") 
+  } else if (p_value <= 0.05) { 
+    return("*") 
+  } 
+} 
+
+interpret_results_after <- function(p_value, name, test = "Paired t-test") { 
+  if (p_value > 0.05) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " > 0.05\n\n") 
+  } else if (p_value <= 0.001) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.001  ***\n\n") 
+  } else if (p_value <= 0.01) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.01  **\n\n") 
+  } else if (p_value <= 0.05) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.05  *\n\n") 
+  } 
+  return(result) 
+} 
+
+# CHANGE THIS 
+# The file path, that is. 
+full_df <- full_no_changing_df 
+
+# Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
+result_df <- full_df[ , c("Subject", "Condition", "Session", "CovertedTime", "TimeElapsed", "PP", "Task")] 
+
+result_df <- result_df %>% 
+  mutate(PP = log(PP)) 
+
+rb_mean_df <- result_df %>% 
+  filter(Session == "RestingBaseline") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(meanRB = mean(PP, na.rm = TRUE)) 
+
+essay_df <- result_df %>% 
+  filter(Task == "Essay") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Essay = mean(PP, na.rm = TRUE)) 
+
+email_df <- result_df %>% 
+  filter(Task == "Email") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Email = mean(PP, na.rm = TRUE)) 
+
+total_df <- merge(rb_mean_df, essay_df, by = c("Subject", "Condition")) 
+total_df <- merge(total_df, email_df, by = c("Subject", "Condition")) 
+
+total_df <- total_df %>% 
+  na.omit() %>% 
+  mutate(Essay = Essay - meanRB) %>% 
+  mutate(Email = Email - meanRB) 
+
+result_sig <- interpret_results(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value) 
+result <- interpret_results_after(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value, "For all groups,") 
+
+grouped_sign_vec <- NULL 
+result_grouped_vec <- NULL 
+cond_df <- total_df %>% 
+  filter(Condition %in% c("IH", "IL")) 
+grouped_sign_vec[1] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[1] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Intermittent,") 
+
+cond_df <- total_df %>% 
+  filter(Condition %in% c("BH", "BL")) 
+grouped_sign_vec[2] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[2] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Batch,") 
+
+condition_levels <- c("IH", "IL", "BH", "BL") 
+sign_vec <- NULL 
+result_vec <- NULL 
+i <- 1 
+for (cond in condition_levels) { 
+  cond_df <- total_df %>% 
+    filter(Condition == cond) 
+  
+  sign_vec[i] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+  result_vec[i] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, paste0("For ", cond, ",")) 
+  i <- i + 1 
+} 
+
+total_grouped_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+total_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+total_grouped_df[total_grouped_df$Condition == "IH", "Condition"] <- "Intermittent" 
+total_grouped_df[total_grouped_df$Condition == "IL", "Condition"] <- "Intermittent" 
+total_grouped_df[total_grouped_df$Condition == "BH", "Condition"] <- "Batch" 
+total_grouped_df[total_grouped_df$Condition == "BL", "Condition"] <- "Batch" 
+
+total_grouped_df <- total_grouped_df %>% 
+    mutate(Condition = factor(Condition)) 
+
+colnames(total_df)[which(names(total_df) == "Value")] <- "PP" 
+colnames(total_df)[which(names(total_df) == "Condition")] <- "Group" 
+colnames(total_df)[which(names(total_df) == "Task")] <- "DualTask" 
+
+total_df <- total_df %>% 
+  mutate(Group = factor(Group)) %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) %>% 
+  mutate(DualTask = factor(DualTask)) %>% 
+  mutate(DualTask = factor(DualTask, levels = c("Email", "Essay"))) 
+
+# CREATING LINEAR MODELS 
+fit_dt <- lme(PP ~ 1 + Group + DualTask, data = total_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit_dt)) 
+
+print( 
+  total_df %>% 
+    mutate(Group = factor(Group, levels = condition_levels)) %>% 
+    group_by(Group) %>% 
+    ggplot(aes(x = Group, y = PP, fill = DualTask)) + 
+      geom_boxplot() + 
+      geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size = 1) + 
+      theme_bw() + 
+      ggtitle(" ") + 
+      ylab(expression(Delta~paste('ln(PP) [',''^'o','C',''^2,']'))) + 
+      theme(axis.title.x=element_blank(), 
+            legend.position="bottom", 
+            axis.text = element_text(size=14), 
+            axis.title = element_text(size=16, face="bold")) + 
+      #stat_summary(fun.data = give.n, geom = "text", color = "black") + 
+      scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+      annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = 8) + 
+      annotate("text", x=2, y=Inf, label= sign_vec[2], vjust = 1.2, size = 8) + 
+      annotate("text", x=3, y=Inf, label= sign_vec[3], vjust = 1.2, size = 8) + 
+      annotate("text", x=4, y=Inf, label= sign_vec[4], vjust = 1.2, size = 8) + 
+      scale_fill_manual(labels = c("Emails", "Report"), values = c("#E2D200", "#DD8D28")) + 
+      scale_x_discrete(labels = c("IF", "IR", "BF", "BR")) 
+) 
+
+cat(result_vec[1]) 
+cat(result_vec[2]) 
+cat(result_vec[3]) 
+cat(result_vec[4]) 
+
+``` 
+
+\newpage 
+Linear Modelling for Writing Quality 
+----- 
+
+Our Linear Model: 
+$$ 
+ Writing Quality = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# READING IN CSV FILES 
+result_df <- testing_df 
+
+essay_score_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_score_master_file.csv", col_types = cols()) 
+names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
+                           "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
+essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
+essay_score_df$Subject <- str_sub(essay_score_df$Subject, end = 4) 
+essay_score_df$Warning <- stri_extract_first_regex(essay_score_df$Score, "[a-zA-Z]*") 
+essay_score_df$Score <- as.numeric(stri_extract_first_regex(essay_score_df$Score, "[0-9]+")) 
+essay_score_df <- essay_score_df %>% 
+  mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
+  mutate(Session = factor(Session, levels = c("WB", "DT"))) 
+
+nlp_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_nlp_results.csv", col_types = cols()) 
+nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
+
+# MERGING CSV FILES 
+full_df <- merge(essay_score_df, result_df, by = "Subject") 
+full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+full_nlp_df <- full_nlp_df %>% 
+  mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+  mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+# CREATING LINEAR MODELS 
+fit_writing_quality <- lme(Score ~ 1 + Group + Session, data = full_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_writing_quality)) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("IH", "IL", "BH", "BL"))) 
+
+levels(full_df$Group) <- c("IF", "IR", "BF", "BR") 
+
+g1 <- full_df %>% 
+  ggplot(aes(x = Group, y = Score, fill = Session)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    ggtitle(" ") + 
+    ylab("ETS Score") + 
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16), 
+          legend.position = "bottom") + 
+    scale_y_continuous(breaks = pretty_breaks(n = 7)) + 
+    scale_fill_manual(labels = c("ST", "DT"), values = c("#00FFFF", "#007FFF")) 
+
+print(g1) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("BR", "IR", "BF", "IF"))) 
+
+full_df_n_only <- full_df %>% 
+  group_by(Session, Group) %>% 
+  summarize(n = n()) 
+
+kable(full_df_n_only, format = "latex", longtable = TRUE) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 
+
+# HR, 4 Groups: 
+
+\newpage 
+## Stress Levels Across Activities  
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta \bar{HR} = 1 + Group + Activity + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# MERGING CSV FILES 
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, HR, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("WB.RB", "SC.RB", "DT.RB", "P.RB")) %>% 
+  filter(Measurement == "HR") 
+levels(diff_df$Session) <- c("WB", "SC", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# diff_df <- merge(diff_df, age_df, by = "Subject") 
+
+# CREATING LINEAR MODELS 
+fit3_diff <- lme(HR ~ 1 + Group + Session, data = diff_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit3_diff)) 
+
+``` 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# Okay, let's loop over everything and get this over with. 
+diff1 <- "WB.RB" 
+diff2 <- "DT.RB" 
+diff3 <- "P.RB" 
+measure <- "HR" 
+
+# Let's make sure we adjust the measure label for HR to indicate that we indeed log it. 
+measure_label <- measure 
+if (measure == "HR") { 
+  measure_label <- paste0("ln(", measure, ")") 
+} 
+
+anova_df <- tibble() 
+anova_df <- testing_df[c("Subject", "Group", "Measurement", diff1, diff2, diff3)] %>% 
+  filter(Measurement == measure) %>% 
+  na.omit() 
+
+anova_df <- anova_df %>% 
+  gather(Measure, Difference, -Subject, -Group, -Measurement) %>% 
+  mutate(Measure = factor(Measure, levels = c(diff1, diff2, diff3))) 
+
+# We specify the order for our conditions. 
+condition_vec <- c("IH", "BH", "IL", "BL") 
+
+print(anova_df %>% 
+  ungroup(Group) %>% 
+  mutate(Group = factor(Group, levels = c("IH", "IL", "BH", "BL"))) %>% 
+  group_by(Group) %>% 
+  ggplot(aes(x = Group, y = Difference, fill = Measure), color = "black") + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(HR)")) + 
+    scale_fill_manual(labels = c("ST", "DT", "P"), values = c("#04BA39", "#FFAE42", "#F8766D")) + 
+    scale_x_discrete(labels = c("IF", "IR", "BF", "BR")) 
+) 
+
+cat("\n  \n  \n") 
+
+print(anova_df %>% 
+  ungroup(Group) %>% 
+  mutate(Group = factor(Group, levels = condition_vec)) %>% 
+  group_by(Group) %>% 
+  ggplot(aes(x = Measure, y = Difference, fill = Group)) + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(HR)")) + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+    scale_x_discrete(labels = c("SingleTask", "DualTask", "Presentation")) + 
+    scale_fill_manual(labels = c("IF", "IR", "BF", "BR"), values = wes_palette("Darjeeling1")) 
+) 
+
+``` 
+
+\newpage 
+## Stress Levels for Dual Task 
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta \bar{HR} = 1 + Group + Dual Task + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+give.n.half <- function(x) { 
+  return(c(y=-Inf, vjust = -1, label=length(x) / 2)) 
+} 
+
+interpret_results <- function(p_value) { 
+  if (p_value > 0.05) { 
+    return(" ") 
+  } else if (p_value <= 0.001) { 
+    return("***") 
+  } else if (p_value <= 0.01) { 
+    return("**") 
+  } else if (p_value <= 0.05) { 
+    return("*") 
+  } 
+} 
+
+interpret_results_after <- function(p_value, name, test = "Paired t-test") { 
+  if (p_value > 0.05) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " > 0.05\n\n") 
+  } else if (p_value <= 0.001) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.001  ***\n\n") 
+  } else if (p_value <= 0.01) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.01  **\n\n") 
+  } else if (p_value <= 0.05) { 
+    result <- paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.05  *\n\n") 
+  } 
+  return(result) 
+} 
+
+# CHANGE THIS 
+# The file path, that is. 
+full_df <- full_no_changing_df 
+
+# Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
+result_df <- full_df[ , c("Subject", "Condition", "Session", "CovertedTime", "TimeElapsed", "HR", "Task")] 
+
+result_df <- result_df %>% 
+  mutate(HR = log(HR)) 
+
+rb_mean_df <- result_df %>% 
+  filter(Session == "RestingBaseline") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(meanRB = mean(HR, na.rm = TRUE)) 
+
+essay_df <- result_df %>% 
+  filter(Task == "Essay") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Essay = mean(HR, na.rm = TRUE)) 
+
+email_df <- result_df %>% 
+  filter(Task == "Email") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Email = mean(HR, na.rm = TRUE)) 
+
+total_df <- merge(rb_mean_df, essay_df, by = c("Subject", "Condition")) 
+total_df <- merge(total_df, email_df, by = c("Subject", "Condition")) 
+
+total_df <- total_df %>% 
+  na.omit() %>% 
+  mutate(Essay = Essay - meanRB) %>% 
+  mutate(Email = Email - meanRB) 
+
+result_sig <- interpret_results(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value) 
+result <- interpret_results_after(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value, "For all groups,") 
+
+grouped_sign_vec <- NULL 
+result_grouped_vec <- NULL 
+cond_df <- total_df %>% 
+  filter(Condition %in% c("IH", "IL")) 
+grouped_sign_vec[1] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[1] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Intermittent,") 
+
+cond_df <- total_df %>% 
+  filter(Condition %in% c("BH", "BL")) 
+grouped_sign_vec[2] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[2] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Batch,") 
+
+condition_levels <- c("IH", "IL", "BH", "BL") 
+sign_vec <- NULL 
+result_vec <- NULL 
+i <- 1 
+for (cond in condition_levels) { 
+  cond_df <- total_df %>% 
+    filter(Condition == cond) 
+  
+  sign_vec[i] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+  result_vec[i] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, paste0("For ", cond, ",")) 
+  i <- i + 1 
+} 
+
+total_grouped_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+total_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+total_grouped_df[total_grouped_df$Condition == "IH", "Condition"] <- "Intermittent" 
+total_grouped_df[total_grouped_df$Condition == "IL", "Condition"] <- "Intermittent" 
+total_grouped_df[total_grouped_df$Condition == "BH", "Condition"] <- "Batch" 
+total_grouped_df[total_grouped_df$Condition == "BL", "Condition"] <- "Batch" 
+
+total_grouped_df <- total_grouped_df %>% 
+    mutate(Condition = factor(Condition)) 
+
+colnames(total_df)[which(names(total_df) == "Value")] <- "HR" 
+colnames(total_df)[which(names(total_df) == "Condition")] <- "Group" 
+colnames(total_df)[which(names(total_df) == "Task")] <- "DualTask" 
+
+total_df <- total_df %>% 
+  mutate(Group = factor(Group)) %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) %>% 
+  mutate(DualTask = factor(DualTask)) %>% 
+  mutate(DualTask = factor(DualTask, levels = c("Email", "Essay"))) 
+
+# CREATING LINEAR MODELS 
+fit_dt <- lme(HR ~ 1 + Group + DualTask, data = total_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit_dt)) 
+
+print( 
+  total_df %>% 
+    mutate(Group = factor(Group, levels = condition_levels)) %>% 
+    group_by(Group) %>% 
+    ggplot(aes(x = Group, y = HR, fill = DualTask)) + 
+      geom_boxplot() + 
+      geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size = 1) + 
+      theme_bw() + 
+      ggtitle(" ") + 
+      ylab(expression(Delta~paste('ln(HR) [',''^'o','C',''^2,']'))) + 
+      theme(axis.title.x=element_blank(), 
+            legend.position="bottom", 
+            axis.text = element_text(size=14), 
+            axis.title = element_text(size=16, face="bold")) + 
+      #stat_summary(fun.data = give.n, geom = "text", color = "black") + 
+      scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+      annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = 8) + 
+      annotate("text", x=2, y=Inf, label= sign_vec[2], vjust = 1.2, size = 8) + 
+      annotate("text", x=3, y=Inf, label= sign_vec[3], vjust = 1.2, size = 8) + 
+      annotate("text", x=4, y=Inf, label= sign_vec[4], vjust = 1.2, size = 8) + 
+      scale_fill_manual(labels = c("Emails", "Report"), values = c("#E2D200", "#DD8D28")) + 
+      scale_x_discrete(labels = c("IF", "IR", "BF", "BR")) 
+) 
+
+cat(result_vec[1]) 
+cat(result_vec[2]) 
+cat(result_vec[3]) 
+cat(result_vec[4]) 
+
+``` 
+
+\newpage 
+Linear Modelling for Writing Quality 
+----- 
+
+Our Linear Model: 
+$$ 
+ Writing Quality = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_writing_quality)) 
+
+print(g1) 
+
+kable(full_df_n_only, format = "latex", longtable = TRUE) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 
+
+# PP, 2 Groups: 
+
+\newpage 
+## Stress Levels Across Activities  
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Group + Activity + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# MERGING CSV FILES 
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, PP, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("WB.RB", "SC.RB", "DT.RB", "P.RB")) %>% 
+  filter(Measurement == "PP") 
+levels(diff_df$Session) <- c("WB", "SC", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# diff_df <- merge(diff_df, age_df, by = "Subject") 
+
+levels(diff_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+fit3_diff <- lme(PP ~ 1 + Group + Session, data = diff_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit3_diff)) 
+``` 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# Okay, let's loop over everything and get this over with. 
+diff1 <- "WB.RB" 
+diff2 <- "DT.RB" 
+diff3 <- "P.RB" 
+measure <- "PP" 
+
+# Let's make sure we adjust the measure label for PP to indicate that we indeed log it. 
+measure_label <- measure 
+if (measure == "PP") { 
+  measure_label <- paste0("ln(", measure, ")") 
+} 
+
+anova_df <- tibble() 
+anova_df <- testing_df[c("Subject", "Group", "Measurement", diff1, diff2, diff3)] %>% 
+  filter(Measurement == measure) %>% 
+  na.omit() 
+
+anova_df <- anova_df %>% 
+  gather(Measure, Difference, -Subject, -Group, -Measurement) %>% 
+  mutate(Measure = factor(Measure, levels = c(diff1, diff2, diff3))) 
+
+anova_df <- anova_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+# We specify the order for our conditions. 
+levels(anova_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+levels(anova_df$Group) <- c("Batch", "Intermittent") 
+
+print(anova_df %>% 
+  ggplot(aes(x = Group, y = Difference, fill = Measure), color = "black") + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_fill_manual(labels = c("ST", "DT", "P"), values = c("#04BA39", "#FFAE42", "#F8766D")) 
+) 
+
+cat("\n  \n  \n") 
+
+print(anova_df %>% 
+  ggplot(aes(x = Measure, y = Difference, fill = Group)) + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+    scale_x_discrete(labels = c("SingleTask", "DualTask", "Presentation")) 
+) 
+
+``` 
+
+\newpage 
+## Stress Levels for Dual Task 
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Group + Dual Task + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+full_df <- full_no_changing_df 
+
+# Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
+result_df <- full_df[ , c("Subject", "Condition", "Session", "CovertedTime", "TimeElapsed", "PP", "Task")] 
+
+result_df <- result_df %>% 
+  mutate(PP = log(PP)) 
+
+rb_mean_df <- result_df %>% 
+  filter(Session == "RestingBaseline") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(meanRB = mean(PP, na.rm = TRUE)) 
+
+essay_df <- result_df %>% 
+  filter(Task == "Essay") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Essay = mean(PP, na.rm = TRUE)) 
+
+email_df <- result_df %>% 
+  filter(Task == "Email") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Email = mean(PP, na.rm = TRUE)) 
+
+total_df <- merge(rb_mean_df, essay_df, by = c("Subject", "Condition")) 
+total_df <- merge(total_df, email_df, by = c("Subject", "Condition")) 
+
+total_df <- total_df %>% 
+  na.omit() %>% 
+  mutate(Essay = Essay - meanRB) %>% 
+  mutate(Email = Email - meanRB) 
+
+result_sig <- interpret_results(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value) 
+result <- interpret_results_after(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value, "For all groups,") 
+
+grouped_sign_vec <- NULL 
+result_grouped_vec <- NULL 
+cond_df <- total_df %>% 
+  filter(Condition %in% c("BH", "BL")) 
+grouped_sign_vec[1] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[1] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Batch,") 
+
+cond_df <- total_df %>% 
+  filter(Condition %in% c("IH", "IL")) 
+grouped_sign_vec[2] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[2] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Intermittent,") 
+
+total_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+colnames(total_df)[which(names(total_df) == "Value")] <- "PP" 
+colnames(total_df)[which(names(total_df) == "Condition")] <- "Group" 
+colnames(total_df)[which(names(total_df) == "Task")] <- "DualTask" 
+
+total_df <- total_df %>% 
+  mutate(Group = factor(Group)) %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) %>% 
+  mutate(DualTask = factor(DualTask)) %>% 
+  mutate(DualTask = factor(DualTask, levels = c("Email", "Essay"))) 
+
+levels(total_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+fit_dt <- lme(PP ~ 1 + Group + DualTask, data = total_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit_dt)) 
+
+print( 
+  total_df %>% 
+    ggplot(aes(x = Group, y = PP, fill = DualTask)) + 
+      geom_boxplot() + 
+      geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size = 1) + 
+      theme_bw() + 
+      ggtitle(" ") + 
+      ylab(expression(Delta~paste('ln(PP) [',''^'o','C',''^2,']'))) + 
+      theme(axis.title.x=element_blank(), 
+            legend.position="bottom", 
+            axis.text = element_text(size=14), 
+            axis.title = element_text(size=16, face="bold")) + 
+      stat_summary(fun.data = give.n, geom = "text", color = "black") + 
+      scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+      annotate("text", x=1, y=Inf, label= grouped_sign_vec[1], vjust = 1.2, size = 8) + 
+      annotate("text", x=2, y=Inf, label= grouped_sign_vec[2], vjust = 1.2, size = 8) + 
+      scale_fill_manual(labels = c("Emails", "Report"), values = c("#E2D200", "#DD8D28")) 
+) 
+
+cat(result_grouped_vec[1]) 
+cat(result_grouped_vec[2]) 
+
+``` 
+
+\newpage 
+Linear Modelling for Writing Quality 
+----- 
+
+Our Linear Model: 
+$$ 
+ Writing Quality = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# READING IN CSV FILES 
+result_df <- testing_df 
+
+essay_score_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_score_master_file.csv", col_types = cols()) 
+names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
+                           "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
+essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
+essay_score_df$Subject <- str_sub(essay_score_df$Subject, end = 4) 
+essay_score_df$Warning <- stri_extract_first_regex(essay_score_df$Score, "[a-zA-Z]*") 
+essay_score_df$Score <- as.numeric(stri_extract_first_regex(essay_score_df$Score, "[0-9]+")) 
+essay_score_df <- essay_score_df %>% 
+  mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
+  mutate(Session = factor(Session, levels = c("WB", "DT"))) 
+
+nlp_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_nlp_results.csv", col_types = cols()) 
+nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
+
+# MERGING CSV FILES 
+full_df <- merge(essay_score_df, result_df, by = "Subject") 
+full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+full_nlp_df <- full_nlp_df %>% 
+  mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+  mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+levels(full_df$Group) <- c("Intermittent", "Intermittent", "Batch", "Batch") 
+levels(full_df$Group) <- c("Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+fit_writing_quality <- lme(Score ~ 1 + Group + Session, data = full_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_writing_quality)) 
+
+g1 <- full_df %>% 
+  ggplot(aes(x = Group, y = Score, fill = Session)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    ggtitle(" ") + 
+    ylab("ETS Score") + 
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16), 
+          legend.position = "bottom") + 
+    scale_y_continuous(breaks = pretty_breaks(n = 7)) + 
+    scale_fill_manual(labels = c("ST", "DT"), values = c("#00FFFF", "#007FFF")) 
+
+print(g1) 
+
+full_df_n_only <- full_df %>% 
+  group_by(Session, Group) %>% 
+  summarize(n = n()) 
+
+kable(full_df_n_only, format = "latex", longtable = TRUE) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 
+
+# HR, 2 Groups: 
+
+\newpage 
+## Stress Levels Across Activities  
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta \bar{HR} = 1 + Group + Activity + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# MERGING CSV FILES 
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, HR, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("WB.RB", "SC.RB", "DT.RB", "P.RB")) %>% 
+  filter(Measurement == "HR") 
+levels(diff_df$Session) <- c("WB", "SC", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# diff_df <- merge(diff_df, age_df, by = "Subject") 
+
+levels(diff_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+fit3_diff <- lme(HR ~ 1 + Group + Session, data = diff_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit3_diff)) 
+
+``` 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# Okay, let's loop over everything and get this over with. 
+diff1 <- "WB.RB" 
+diff2 <- "DT.RB" 
+diff3 <- "P.RB" 
+measure <- "HR" 
+
+# Let's make sure we adjust the measure label for PP to indicate that we indeed log it. 
+measure_label <- measure 
+if (measure == "PP") { 
+  measure_label <- paste0("ln(", measure, ")") 
+} 
+
+anova_df <- tibble() 
+anova_df <- testing_df[c("Subject", "Group", "Measurement", diff1, diff2, diff3)] %>% 
+  filter(Measurement == measure) %>% 
+  na.omit() 
+
+anova_df <- anova_df %>% 
+  gather(Measure, Difference, -Subject, -Group, -Measurement) %>% 
+  mutate(Measure = factor(Measure, levels = c(diff1, diff2, diff3))) 
+
+anova_df <- anova_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+# We specify the order for our conditions. 
+levels(anova_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+levels(anova_df$Group) <- c("Batch", "Intermittent") 
+
+print(anova_df %>% 
+  ggplot(aes(x = Group, y = Difference, fill = Measure), color = "black") + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_fill_manual(labels = c("ST", "DT", "P"), values = c("#04BA39", "#FFAE42", "#F8766D")) 
+) 
+
+cat("\n  \n  \n") 
+
+print(anova_df %>% 
+  ggplot(aes(x = Measure, y = Difference, fill = Group)) + 
+    geom_boxplot(color = "#000000") + 
+    theme_bw() + 
+    geom_hline(yintercept=0, linetype="dashed", color = "black", alpha = 0.6, size=1) + 
+    theme(axis.title.x=element_blank(), 
+          legend.position="bottom", 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold"), 
+          legend.text=element_text(size=14), 
+          legend.title=element_text(size=14)) + 
+    labs(#title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+         y = expression(Delta~"ln(PP)")) + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+    scale_x_discrete(labels = c("SingleTask", "DualTask", "Presentation")) 
+) 
+
+``` 
+
+\newpage 
+## Stress Levels for Dual Task 
+
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta \bar{HR} = 1 + Group + Dual Task + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+full_df <- full_no_changing_df 
+
+# Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
+result_df <- full_df[ , c("Subject", "Condition", "Session", "CovertedTime", "TimeElapsed", "HR", "Task")] 
+
+rb_mean_df <- result_df %>% 
+  filter(Session == "RestingBaseline") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(meanRB = mean(HR, na.rm = TRUE)) 
+
+essay_df <- result_df %>% 
+  filter(Task == "Essay") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Essay = mean(HR, na.rm = TRUE)) 
+
+email_df <- result_df %>% 
+  filter(Task == "Email") %>% 
+  group_by(Subject, Condition) %>% 
+  summarize(Email = mean(HR, na.rm = TRUE)) 
+
+total_df <- merge(rb_mean_df, essay_df, by = c("Subject", "Condition")) 
+total_df <- merge(total_df, email_df, by = c("Subject", "Condition")) 
+
+total_df <- total_df %>% 
+  na.omit() %>% 
+  mutate(Essay = Essay - meanRB) %>% 
+  mutate(Email = Email - meanRB) 
+
+result_sig <- interpret_results(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value) 
+result <- interpret_results_after(t.test(total_df$Essay, total_df$Email, data = total_df, paired = TRUE)$p.value, "For all groups,") 
+
+grouped_sign_vec <- NULL 
+result_grouped_vec <- NULL 
+cond_df <- total_df %>% 
+  filter(Condition %in% c("BH", "BL")) 
+grouped_sign_vec[1] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[1] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Batch,") 
+
+cond_df <- total_df %>% 
+  filter(Condition %in% c("IH", "IL")) 
+grouped_sign_vec[2] <- interpret_results(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value) 
+result_grouped_vec[2] <- interpret_results_after(t.test(cond_df$Essay, cond_df$Email, data = cond_df, paired = TRUE)$p.value, "For Intermittent,") 
+
+total_df <- total_df %>% 
+  gather(Task, Value, -Subject, -Condition, -meanRB) 
+
+colnames(total_df)[which(names(total_df) == "Value")] <- "HR" 
+colnames(total_df)[which(names(total_df) == "Condition")] <- "Group" 
+colnames(total_df)[which(names(total_df) == "Task")] <- "DualTask" 
+
+total_df <- total_df %>% 
+  mutate(Group = factor(Group)) %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) %>% 
+  mutate(DualTask = factor(DualTask)) %>% 
+  mutate(DualTask = factor(DualTask, levels = c("Email", "Essay"))) 
+
+levels(total_df$Group) <- c("Batch", "Intermittent", "Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+fit_dt <- lme(HR ~ 1 + Group + DualTask, data = total_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(fit_dt)) 
+
+print( 
+  total_df %>% 
+    ggplot(aes(x = Group, y = HR, fill = DualTask)) + 
+      geom_boxplot() + 
+      geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size = 1) + 
+      theme_bw() + 
+      ggtitle(" ") + 
+      ylab(expression(Delta~paste('ln(HR) [',''^'o','C',''^2,']'))) + 
+      theme(axis.title.x=element_blank(), 
+            legend.position="bottom", 
+            axis.text = element_text(size=14), 
+            axis.title = element_text(size=16, face="bold")) + 
+      stat_summary(fun.data = give.n, geom = "text", color = "black") + 
+      scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) + 
+      annotate("text", x=1, y=Inf, label= grouped_sign_vec[1], vjust = 1.2, size = 8) + 
+      annotate("text", x=2, y=Inf, label= grouped_sign_vec[2], vjust = 1.2, size = 8) + 
+      scale_fill_manual(labels = c("Emails", "Report"), values = c("#E2D200", "#DD8D28")) 
+) 
+
+cat(result_grouped_vec[1]) 
+cat(result_grouped_vec[2]) 
+
+``` 
+
+\newpage 
+Linear Modelling for Writing Quality 
+----- 
+
+Our Linear Model: 
+$$ 
+ Writing Quality = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_writing_quality)) 
+
+print(g1) 
+
+kable(full_df_n_only, format = "latex", longtable = TRUE) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 
+
+\newpage 
+Let's Get to 10 \fontfamily{lmr}\selectfont$\star$ with Four Groups 
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + ETS Score + Group + Activity + 1|Subject 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+essay_score_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_score_master_file.csv", col_types = cols()) 
+names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
+                           "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
+essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
+essay_score_df$Subject <- str_sub(essay_score_df$Subject, end = 4) 
+essay_score_df$Warning <- stri_extract_first_regex(essay_score_df$Score, "[a-zA-Z]*") 
+essay_score_df$Score <- as.numeric(stri_extract_first_regex(essay_score_df$Score, "[0-9]+")) 
+essay_score_df <- essay_score_df %>% 
+  mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
+  mutate(Session = factor(Session, levels = c("WB", "DT"))) 
+
+# nlp_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_nlp_results.csv", col_types = cols()) 
+# nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
+# colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
+
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, PP, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("WB.RB", "DT.RB")) %>% 
+  filter(Measurement == "PP") 
+levels(diff_df$Session) <- c("WB", "SC", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+
+# MERGING CSV FILES 
+full_df <- merge(essay_score_df, diff_df, by = c("Subject", "Session")) 
+# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+# full_nlp_df <- full_nlp_df %>% 
+#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+colnames(full_df)[which(names(full_df) == "Session")] <- "Activity" 
+colnames(full_df)[which(names(full_df) == "Score")] <- "ETSScore" 
+
+# levels(full_df$Group) <- c("Intermittent", "Intermittent", "Batch", "Batch") 
+# levels(full_df$Group) <- c("Batch", "Intermittent") 
+
+# CREATING LINEAR MODELS 
+eight_star_fit <- lme(PP ~ 1 + ETSScore + Group + Activity, data = full_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(eight_star_fit)) 
+
+# levels(full_nlp_df$Group) <- c("Intermittent", "Intermittent", "Batch", "Batch") 
+# levels(full_nlp_df$Group) <- c("Batch", "Intermittent") 
+# 
+# # CREATING LINEAR MODELS 
+# eight_star_fit <- lme(PP ~ 1 + ETSScore + Group + Activity, data = full_df, random = ~1|Subject, na.action = na.omit) 
+# 
+# # SUMMARIZING LINEAR MODELS 
+# print(summary(eight_star_fit)) 
+
+# kable(full_df[ , c("Subject", "PP", "ETSScore", "Group", "Activity")], format = "latex", longtable = TRUE) %>% 
+#   kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 

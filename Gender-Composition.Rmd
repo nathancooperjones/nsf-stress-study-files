@@ -1,0 +1,72 @@
+---
+title: "Let's Look at Gender Distributions!" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+--- 
+
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis"} 
+library(tidyverse) 
+library(knitr) 
+library(tidyverse) 
+# install.packages("stringi") 
+library(stringi) 
+library(tidyr) 
+library(knitr) 
+library(kableExtra) 
+library(grid) 
+library(gridExtra) 
+
+# change the path to fit your needs 
+full_df <- read_csv("~/Desktop/full_df.csv", col_types = cols()) 
+gender_df <- read_csv("~/Desktop/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
+gender_df <- gender_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
+names(gender_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
+gender_df[gender_df$Gender == 1, "Gender"] <- "Male" 
+gender_df[gender_df$Gender == 2, "Gender"] <- "Female" 
+
+full_df <- merge(full_df, gender_df, by = "Subject") 
+
+result_df <- full_df[ , c("Subject", "Condition", "Session")] 
+result_df <- result_df[!duplicated(result_df$Subject), ] 
+
+plot_gender <- function() { 
+  
+  # merge the index table dataframe and the NASA dataframe 
+  new_df <- merge(gender_df, result_df, by = "Subject") 
+  
+  new_df <- new_df %>% 
+      mutate(Condition = factor(Condition, levels = c("IH", "BH", "IL", "BL"))) %>% 
+      mutate(Gender = factor(Gender, levels = c("Male", "Female"))) %>% 
+      group_by(Condition) 
+  
+  # plot the bar graph 
+  print(new_df %>% 
+    ggplot(aes(x = Gender, fill = Gender)) + 
+    geom_bar() + # color = "black" ? 
+    facet_wrap(~Condition, scales="free") + 
+    #scale_y_continuous(breaks = 1:7) + 
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+    scale_fill_manual(values=c("#40ADED", "#E567BE")) + 
+    theme(legend.position="none") + 
+    #geom_text(aes(x=Inf, y=Inf, label=num), show.legend = FALSE, vjust = 1.5, hjust = 1.5) + 
+    #scale_color_discrete(name = "Gender") + 
+    scale_x_discrete(drop = FALSE) + 
+    scale_y_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) 
+  ) 
+
+} 
+
+```
+
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis", fig.height = 6} 
+## MAIN 
+plot_gender() 
+```

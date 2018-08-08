@@ -39,11 +39,22 @@ e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067')
 
+discarded_df <- tibble() 
 if (length(discarded_subj_list) > 0) { 
-  discarded_df <- tibble("Subject" = discarded_subj_list, 
-                         "Session" = c("RestingBaseline", "WritingBaseline", "StressCondition", "DualTask", "Presentation"), 
-                         "Measure" = "ALL", 
-                         "Explaination" = "Stopped halfway through") 
+  for (discarded_subj in discarded_subj_list) { 
+    if (nrow(discarded_df) == 0) { 
+      discarded_df <- tibble("Subject" = discarded_subj, 
+                             "Session" = c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation"), 
+                             "Measure" = "ALL", 
+                             "Explaination" = "Stopped halfway through") 
+    } else { 
+      discarded_df_temp <- tibble("Subject" = discarded_subj, 
+                             "Session" = c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation"), 
+                             "Measure" = "ALL", 
+                             "Explaination" = "Stopped halfway through") 
+      discarded_df <- rbind(discarded_df, discarded_df_temp) 
+    } 
+  } 
 } 
 
 #-------------------------#
@@ -176,7 +187,7 @@ convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, times
   } else if (hour(intermittent_time) > hour(max_time)) { 
     df[[timestamp[1]]] <- df[[timestamp[1]]] + (12 * one_hour_sec) 
     df[[timestamp[2]]] <- df[[timestamp[2]]] + (12 * one_hour_sec) 
-    message(paste('Timestamps changed for ', subj_name, '. ')) 
+    message(paste0('Timestamps changed for ', subj_name, '. ')) 
     flush.console() 
     return(df) 
   } 

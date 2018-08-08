@@ -16,3 +16,170 @@ Error: NoSuchMethodException (Java): No constructor matching the given parameter
 Group1-T019-SuperSession: SUCCESSFUL
 Group1-T021-SuperSession: SUCCESSFUL
 Group1-T031-SuperSession: SUCCESSFUL
+Group1-T032-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group1-T033-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+----------------------------------------------------------
+Group1-T035-SuperSession: ERROR!
+Error in if (hour(intermittent_time) > hour(max_time)) {: missing value where TRUE/FALSE needed
+
+
+Group1-T046-SuperSession: SUCCESSFUL
+Group1-T047-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group1-T049-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group1-T051-SuperSession: SUCCESSFUL
+Group2-T061-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group2-T062-SuperSession: ERROR!
+Error in if (min_time > max_time) {: argument is of length zero
+
+
+Group2-T063-SuperSession: SUCCESSFUL
+Group2-T064-SuperSession: SUCCESSFUL
+Group2-T065-SuperSession: SUCCESSFUL
+Group2-T066-SuperSession: SUCCESSFUL
+Group2-T067-SuperSession: NOT PROCESSED
+----------------------------------------------------------
+Group2-T076-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+Group2-T077-SuperSession: SUCCESSFUL
+Group2-T078-SuperSession: SUCCESSFUL
+Group2-T079-SuperSession: SUCCESSFUL
+Group2-T080-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group2-T081-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+----------------------------------------------------------
+Group2-T082-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group2-T083-SuperSession: SUCCESSFUL
+Group2-T084-SuperSession: SUCCESSFUL
+Group2-T091-SuperSession: SUCCESSFUL
+Group2-T092-SuperSession: SUCCESSFUL
+Group2-T093-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group2-T094-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+----------------------------------------------------------
+Group2-T095-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group2-T096-SuperSession: SUCCESSFUL
+Group2-T097-SuperSession: SUCCESSFUL
+Group2-T098-SuperSession: SUCCESSFUL
+Group2-T106-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group2-T107-SuperSession: ERROR!
+Error in if (min_time > max_time) {: argument is of length zero
+
+
+Group2-T108-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group2-T109-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+----------------------------------------------------------
+Group2-T110-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+----------------------------------------------------------
+Group2-T111-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group2-T112-SuperSession: SUCCESSFUL
+Group3-T121-SuperSession: SUCCESSFUL
+Group3-T122-SuperSession: SUCCESSFUL
+Group3-T124-SuperSession: SUCCESSFUL
+Group3-T126-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T127-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+Group3-T128-SuperSession: SUCCESSFUL
+Group3-T130-SuperSession: SUCCESSFUL
+Group3-T132-SuperSession: SUCCESSFUL
+Group3-T136-SuperSession: SUCCESSFUL
+Group3-T138-SuperSession: SUCCESSFUL
+Group3-T139-SuperSession: SUCCESSFUL
+Group3-T140-SuperSession: SUCCESSFUL
+Group3-T141-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T142-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group3-T144-SuperSession: SUCCESSFUL
+Group3-T145-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T146-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+----------------------------------------------------------
+Group3-T148-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group3-T151-SuperSession: SUCCESSFUL
+Group3-T152-SuperSession: SUCCESSFUL
+Group3-T153-SuperSession: SUCCESSFUL
+Group3-T154-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T155-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+Group3-T156-SuperSession: SUCCESSFUL
+Group3-T157-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T158-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+Group3-T160-SuperSession: SUCCESSFUL
+Group3-T166-SuperSession: SUCCESSFUL
+----------------------------------------------------------
+Group3-T167-SuperSession: ERROR!
+Error in file(file, "rt"): invalid 'description' argument
+
+
+----------------------------------------------------------
+Group3-T168-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+----------------------------------------------------------
+Group3-T169-SuperSession: ERROR!
+Error in getMatchedFileNames(session_dir, common_file_pattern)[[1]]: subscript out of bounds
+
+
+----------------------------------------------------------
+Group3-T170-SuperSession: ERROR!
+Error: NoSuchMethodException (Java): No constructor matching the given parameters
+
+
+Group3-T172-SuperSession: SUCCESSFUL
+Group3-T173-SuperSession: SUCCESSFUL
+Group3-T175-SuperSession: SUCCESSFUL
+Group3-T176-SuperSession: SUCCESSFUL
+Group3-T178-SuperSession: SUCCESSFUL
