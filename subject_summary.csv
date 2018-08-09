@@ -164,11 +164,6 @@
 "T124","StressCondition","IH",1,1,1,0,0,0,0
 "T124","DualTask","IH",1,1,1,0,0,0,0
 "T124","Presentation","IH",1,1,1,0,0,0,0
-"T126","RestingBaseline","IH",1,-1,1,0,0,0,0
-"T126","BaselineWriting","IH",1,-1,1,0,0,0,0
-"T126","StressCondition","IH",1,-1,1,0,0,0,0
-"T126","DualTask","IH",1,-1,1,0,0,0,0
-"T126","Presentation","IH",1,-1,1,0,0,0,0
 "T128","RestingBaseline","IH",1,1,1,0,0,0,0
 "T128","BaselineWriting","IH",1,1,1,0,0,0,0
 "T128","StressCondition","IH",1,-1,1,0,0,0,0

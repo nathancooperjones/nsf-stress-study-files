@@ -203,62 +203,66 @@ splitSessions <- function(session_dir, subj_name) {
   
   
   baseline_essay_start_time <- convert_date(subj_interface_df$Baseline.Essay.Timestamp[1], subj_interface_date_format)
-  date(baseline_essay_start_time) <- as.Date(rb_start_time)
-  baseline_essay_end_time <- baseline_essay_start_time + 5*60
-  
   stress_cond_start_time <- convert_date(subj_interface_df$Stress.Condition.Timestamp[1], subj_interface_date_format)
-  date(stress_cond_start_time) <- as.Date(rb_start_time)
-  stress_cond_end_time <- stress_cond_start_time + 5*60
-  
   dual_task_start_time <- convert_date(subj_interface_df$Dual.Essay.Timestamp[1], subj_interface_date_format)
+  
+  date(baseline_essay_start_time) <- as.Date(rb_start_time)
+  date(stress_cond_start_time) <- as.Date(rb_start_time)
   date(dual_task_start_time) <- as.Date(rb_start_time)
+  
+  baseline_essay_end_time <- baseline_essay_start_time + 5*60
+  stress_cond_end_time <- stress_cond_start_time + 5*60
   dual_task_end_time <- dual_task_start_time + 50*60
   
-  
+  # print(difftime(dual_task_start_time, stress_cond_start_time, units = "min"))
+  # if(difftime(dual_task_start_time, stress_cond_start_time, units = "min") < 5) {
+  #   print(subj_name)
+  # }
+
   marker_time_df <- data.frame()
   marker_time_df <- getNextSessionRows('RestingBaseline', marker_time_df, rb_start_time, rb_end_time)
   marker_time_df <- getNextSessionRows('BaselineWriting', marker_time_df, baseline_essay_start_time, baseline_essay_end_time)
   marker_time_df <- getNextSessionRows('StressCondition', marker_time_df, stress_cond_start_time, stress_cond_end_time)
   marker_time_df <- getNextSessionRows('DualTask', marker_time_df, dual_task_start_time, dual_task_end_time)
   marker_time_df <- getNextSessionRows('Presentation', marker_time_df, presentation_start_time, presentation_end_time)
-  
+
   convert_to_csv(marker_time_df, file.path(session_dir, paste0(substr(file_name, 1, 11), '_marker.csv')))
-  
+
   if(!isEmpty(pp_file_name)) {
     if(isEmpty(nr_pp_file_name)) {
       pp_df <- read.csv(file.path(session_dir, pp_file_name))
-      names(pp_df) <- c("Frame#",	"Time",	"Timestamp", "Perspiration") 
+      names(pp_df) <- c("Frame#",	"Time",	"Timestamp", "Perspiration")
       pp_df <- data.frame(convertTimestamp(pp_df, subj_interface_df)[1])
-      
+
       pp_df$NR_Perspiration <- remove_noise(pp_df$Perspiration)
       downsampled_pp_df <- downsample_using_mean(pp_df, c('Perspiration', 'NR_Perspiration'))
-      
+
       downsampled_pp_df <- downsampled_pp_df[, c(1, 4, 2, 3)]
       names(downsampled_pp_df)[names(downsampled_pp_df) == 'Timestamp'] <- 'CovertedTime'
       convert_to_csv(downsampled_pp_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-4), '_nr.csv')))
-      
+
     } else {
       print(file.path(session_dir, nr_pp_file_name))
       downsampled_pp_df <- read.csv(file.path(session_dir, nr_pp_file_name))
       downsampled_pp_df$CovertedTime <- as.POSIXct(downsampled_pp_df$CovertedTime)
     }
-    
+
     pp_with_session_df <- getSignalWithSession(marker_time_df, downsampled_pp_df)
     convert_to_csv(pp_with_session_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_session.csv')))
-    
+
     merged_df <- pp_with_session_df
   }
-  
-  
-  
+
+
+
   ##########################################################################
   ######################## Merging Sensor Signals ##########################
   ##########################################################################
   #-------------------------------------------------------------------------------------------- ZEPHYR
   zephyr_file_name <- getMatchedFileNames(session_dir, summary_file_pattern)
-  
+
   if(!isEmpty(zephyr_file_name)) {
-    ### Read only Time, HR and BR 
+    ### Read only Time, HR and BR
     zephyr_df <- read.csv(file.path(session_dir, zephyr_file_name))[, c(1, 2, 3, 15)]
     zephyr_df$CovertedTime <- as.POSIXct(zephyr_df$Time, format=zephyr_date_format)
     if(!isEmpty(pp_file_name)) {
@@ -266,121 +270,126 @@ splitSessions <- function(session_dir, subj_name) {
     } else {
       merged_df <- getSignalWithSession(marker_time_df, zephyr_df)[,c(1, 4, 2, 3, 5)]
     }
-    
-    ## NOW WE FILTER OUT HEART RATE SIGNALS FOR SESSIONS WHO HAVE HEART RATE CONFIDENCE LESS THAN 85 
-    heart_rate_confidence_threshold <- 95 
-    should_we_filter <- merged_df %>% 
-      group_by(Session) %>% 
-      summarize(meanHR = mean(HRConfidence, na.rm = TRUE)) 
-    
-    session_list <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation") 
-    bad_sessions <- NULL 
-    for (session in session_list) { 
-      avg <- (should_we_filter %>% 
-                filter(Session == session))[1, "meanHR"] 
-      
-      if (is.na(avg) | avg < heart_rate_confidence_threshold) { 
-        bad_sessions <- c(bad_sessions, session) 
-      } 
-    } 
-    
-    if (!is.null(bad_sessions)) { 
-      merged_df[merged_df$Session %in% bad_sessions, "HR"] <- NA 
-      specific_discarded_df <- tibble("Subject" = subj_name, "Session" = bad_sessions) 
-      
-      if (nrow(discarded_df) == 0) { 
-        discarded_df <<- specific_discarded_df 
-      } else { 
-        discarded_df <<- rbind(discarded_df, specific_discarded_df) 
-      } 
-      
-      message(paste0(subj_name, " HR signal for ", bad_sessions, " has been removed due to HR Confidence less than ", 
-                     heart_rate_confidence_threshold, ". // ")) 
-    } 
-    
-    merged_df <- merged_df[ , (names(merged_df) != "HRConfidence")] 
-    
+
+    ## NOW WE FILTER OUT HEART RATE SIGNALS FOR SESSIONS WHO HAVE HEART RATE CONFIDENCE LESS THAN 85
+    heart_rate_confidence_threshold <- 95
+    should_we_filter <- merged_df %>%
+      group_by(Session) %>%
+      summarize(meanHR = mean(HRConfidence, na.rm = TRUE))
+
+    session_list <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation")
+    bad_sessions <- NULL
+    for (session in session_list) {
+      avg <- (should_we_filter %>%
+                filter(Session == session))[1, "meanHR"]
+
+      if (is.na(avg) | avg < heart_rate_confidence_threshold) {
+        bad_sessions <- c(bad_sessions, session)
+      }
+    }
+
+    if (!is.null(bad_sessions)) {
+      merged_df[merged_df$Session %in% bad_sessions, "HR"] <- NA
+      specific_discarded_df <- tibble("Subject" = subj_name, "Session" = bad_sessions)
+
+      if (nrow(discarded_df) == 0) {
+        discarded_df <<- specific_discarded_df
+      } else {
+        discarded_df <<- rbind(discarded_df, specific_discarded_df)
+      }
+
+      message(paste0(subj_name, " HR signal for ", bad_sessions, " has been removed due to HR Confidence less than ",
+                     heart_rate_confidence_threshold, ". // "))
+    }
+
+    merged_df <- merged_df[ , (names(merged_df) != "HRConfidence")]
+
     ## DONT DELETE
     colnames(merged_df)[2] <- 'Time'
     names(merged_df)[names(merged_df) == 'HR'] <- 'HR_z'
     names(merged_df)[names(merged_df) == 'BR'] <- 'BR_z'
   }
-  
-  
+
+
   #-------------------------------------------------------------------------------------------- EMPATICA
   e4_file_list <- getMatchedFileNames(session_dir, e4_file_pattern)
   for(e4_file_name in e4_file_list) {
-    # merged_df <- sapply(e4_file_list, function(e4_file_name) { 
+    # merged_df <- sapply(e4_file_list, function(e4_file_name) {
     e4_df <- read_csv(file.path(session_dir, e4_file_name), col_names=F, col_types = cols())
-    
+
     # if(ncol(df) > 1) {
     #   message('Expected one column starting with UTC time then sample rate then values - returning original dataframe.')
     #   flush.console()
     #   return(df)
     # }
-    
-    timestamp <- as.numeric(e4_df[1, 1]) 
-    rate <- as.numeric(e4_df[2, 1]) 
+
+    timestamp <- as.numeric(e4_df[1, 1])
+    rate <- as.numeric(e4_df[2, 1])
     e4_df <- e4_df[-(1:2), ]
-    
+
     vector <- c(timestamp)
-    if (rate==1) { 
+    if (rate==1) {
       ## Sample rate is 1 - just add a CovertedTime timestamp
-      for (i in 2:nrow(e4_df)) { 
-        vector <- c(vector, timestamp + i - 1) 
-      } 
-      
-    } else { 
-      ## Sample rate is not 1 - take mean for every `rate` values, then add a CovertedTime timestamp 
-      for (i in 1:round(nrow(e4_df)/rate)) { 
-        e4_df[i, ] <- sum(e4_df[(rate * (i - 1) + 1):(rate * i), ])/rate 
-        vector <- c(vector, timestamp + i) 
-      } 
-      
-      vector <- vector[-length(vector)] 
-      ## list is one element too large after the loop, so we delete the final element 
-      e4_df <- e4_df[1:round(nrow(e4_df)/rate), ] 
-    } 
-    
+      for (i in 2:nrow(e4_df)) {
+        vector <- c(vector, timestamp + i - 1)
+      }
+
+    } else {
+      ## Sample rate is not 1 - take mean for every `rate` values, then add a CovertedTime timestamp
+      for (i in 1:round(nrow(e4_df)/rate)) {
+        e4_df[i, ] <- sum(e4_df[(rate * (i - 1) + 1):(rate * i), ])/rate
+        vector <- c(vector, timestamp + i)
+      }
+
+      vector <- vector[-length(vector)]
+      ## list is one element too large after the loop, so we delete the final element
+      e4_df <- e4_df[1:round(nrow(e4_df)/rate), ]
+    }
+
     colnames(e4_df) <- c(sub('.csv', '', sub('.*/', '', e4_file_name)) )
-    e4_df$CovertedTime <- as.POSIXct(vector, origin='1970-01-01', tz='America/Chicago') # timestamp with Houston timezone 
+    e4_df$CovertedTime <- as.POSIXct(vector, origin='1970-01-01', tz='America/Chicago') # timestamp with Houston timezone
     e4_df <- data.frame(e4_df)
     # e4_df$Time <- as.numeric(e4_df$CovertedTime - head(df$CovertedTime, n=1), units='secs') # elapsed time
-    
-    ## Change the column names so they are more meaningful: 
-    if (grepl('phone', e4_file_name)) { 
-      if (grepl('HR', e4_file_name)) { 
-        names(e4_df)[names(e4_df) == 'HR'] <- 'HR_i' 
-      } else if (grepl('EDA', e4_file_name)){ 
-        names(e4_df)[names(e4_df) == 'EDA'] <- 'EDA_i' 
-      } 
-    } else if (grepl('laptop', e4_file_name)) { 
-      if (grepl('HR', e4_file_name)) { 
-        names(e4_df)[names(e4_df) == 'HR'] <- 'HR_l' 
-      } else if (grepl('EDA', e4_file_name)){ 
-        names(e4_df)[names(e4_df) == 'EDA'] <- 'EDA_l' 
-      } 
+
+    ## Change the column names so they are more meaningful:
+    if (grepl('phone', e4_file_name)) {
+      if (grepl('HR', e4_file_name)) {
+        names(e4_df)[names(e4_df) == 'HR'] <- 'HR_i'
+      } else if (grepl('EDA', e4_file_name)){
+        names(e4_df)[names(e4_df) == 'EDA'] <- 'EDA_i'
+      }
+    } else if (grepl('laptop', e4_file_name)) {
+      if (grepl('HR', e4_file_name)) {
+        names(e4_df)[names(e4_df) == 'HR'] <- 'HR_l'
+      } else if (grepl('EDA', e4_file_name)){
+        names(e4_df)[names(e4_df) == 'EDA'] <- 'EDA_l'
+      }
     }
-    
-    ## TIMEZONE BUG FIX 
-    if (as.numeric(e4_df$CovertedTime[1] - merged_df$CovertedTime[1]) > 1) { 
-      e4_df$CovertedTime <- e4_df$CovertedTime - 2 * one_hour_sec 
-    } 
-    
+
+    ## TIMEZONE BUG FIX
+    if (as.numeric(e4_df$CovertedTime[1] - merged_df$CovertedTime[1]) > 1) {
+      e4_df$CovertedTime <- e4_df$CovertedTime - 2 * one_hour_sec
+    }
+
     merged_df <- merge(merged_df, e4_df, by='CovertedTime')
-    
+
     # return(merged_df)
     # })
   }
-  
+
   convert_to_csv(merged_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_merged.csv')))
+
+ 
 }
+
+
+
 
 splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
   sapply(grp_list, function(grp_name) {
-    # sapply(grp_list[1], function(grp_name) {
+  # sapply(grp_list[1], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
@@ -423,13 +432,15 @@ splitSessionsForPP <- function() {
       })
     })
   })
+  
+  convert_to_csv(discarded_df, "discarded_HR.csv") 
 }
 
 
 #-------------------------#
 #-------Main Program------#
 #-------------------------#
-current_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd(current_dir)
 
 
@@ -444,11 +455,9 @@ log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
 
-filtered_log.file <- file.path(log_dir, paste0('split-sessions-filtered-subjects-', format(Sys.Date(), format='%m-%d-%y'), '.txt')) 
-file.create(filtered_log.file) 
+# filtered_log.file <- file.path(log_dir, paste0('split-sessions-filtered-subjects-', format(Sys.Date(), format='%m-%d-%y'), '.txt')) 
+# file.create(filtered_log.file) 
 
 
 copyReExtractedDataToNsfDir() 
 splitSessionsForPP() 
-
-convert_to_csv(discarded_df, "discarded_HR.csv") 
