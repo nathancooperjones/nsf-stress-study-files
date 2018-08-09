@@ -245,35 +245,35 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
 
 ## IH 
 find_subjects("IH") 
-title <- ggdraw() + draw_label("Intermittent High (IH) Essays", fontface='bold') 
+title <- ggdraw() + draw_label("Intermittent Filler (IF) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("IH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## IL 
 find_subjects("IL") 
-title <- ggdraw() + draw_label("Intermittent Low (IL) Essays", fontface='bold') 
+title <- ggdraw() + draw_label("Intermittent Nothing (IN) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("IL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BH 
 find_subjects("BH") 
-title <- ggdraw() + draw_label("Batch High (BH) Essays", fontface='bold') 
+title <- ggdraw() + draw_label("Batch Filler (BF) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("BH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BL 
 find_subjects("BL") 
-title <- ggdraw() + draw_label("Batch Low (BL) Essays", fontface='bold') 
+title <- ggdraw() + draw_label("Batch Nothing (BN) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("BL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 
 ## WRITE THE GRAND CSV 
-convert_to_csv(result_df, file.path('essay_nlp_results.csv')) 
+convert_to_csv(result_df, file.path('@Datasets/essay_nlp_results.csv')) 
 
 
 ## ESSAY PROMPTS 

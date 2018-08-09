@@ -243,13 +243,13 @@ figure_out_title <- function(subj_name, condition, col_name) {
   
   part_one <- "Unknown condition" 
   if (isMatch(condition, 'IH')) { 
-    part_one <- 'Intermittent High' 
+    part_one <- 'Intermittent Filler' 
   } else if (isMatch(condition, 'IL')) { 
-    part_one <- 'Intermittent Low' 
+    part_one <- 'Intermittent Nothing' 
   } else if (isMatch(condition, 'BH')) { 
-    part_one <- 'Batch High' 
+    part_one <- 'Batch Filler' 
   } else if (isMatch(condition, 'BL')) { 
-    part_one <- 'Batch Low' 
+    part_one <- 'Batch Nothing' 
   } 
   
   return(paste0(subj_name, " (", part_one, ") ", col_name)) 
@@ -261,7 +261,7 @@ figure_out_title <- function(subj_name, condition, col_name) {
 
 \newpage  
 \vspace*{\fill} 
-# Intermittent-High (IH) Subjects 
+# Intermittent-Filler (IF) Subjects 
 \vspace*{\fill} 
 \newpage  
 ```{r echo=FALSE, message=FALSE, warning=FALSE} 
@@ -272,7 +272,7 @@ find_subject_sessions("IH", n)
 
 \newpage  
 \vspace*{\fill} 
-# Intermittent-Low (IL) Subjects 
+# Intermittent-Nothing (IN) Subjects 
 \vspace*{\fill} 
 \newpage  
 ```{r echo=FALSE, message=FALSE, warning=FALSE} 
@@ -281,7 +281,7 @@ find_subject_sessions("IL", n)
 
 \newpage  
 \vspace*{\fill} 
-# Batch-High (BH) Subjects 
+# Batch-Filler (BF) Subjects 
 \vspace*{\fill} 
 \newpage  
 ```{r echo=FALSE, message=FALSE, warning=FALSE} 
@@ -290,7 +290,7 @@ find_subject_sessions("BH", n)
 
 \newpage  
 \vspace*{\fill} 
-# Batch-Low (BL) Subjects 
+# Batch-Nothing (BN) Subjects 
 \vspace*{\fill} 
 \newpage  
 ```{r echo=FALSE, message=FALSE, warning=FALSE} 

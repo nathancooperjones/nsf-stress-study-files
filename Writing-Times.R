@@ -178,28 +178,28 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
 
 ## IH 
 find_subjects("IH") 
-title <- ggdraw() + draw_label("Intermittent High (IH) Writing Times", fontface='bold') 
+title <- ggdraw() + draw_label("Intermittent Filler (IF) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("IH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## IL 
 find_subjects("IL") 
-title <- ggdraw() + draw_label("Intermittent Low (IL) Writing Times", fontface='bold') 
+title <- ggdraw() + draw_label("Intermittent Nothing (IN) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("IL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BH 
 find_subjects("BH") 
-title <- ggdraw() + draw_label("Batch High (BH) Writing Times", fontface='bold') 
+title <- ggdraw() + draw_label("Batch Filler (BF) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("BH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BL 
 find_subjects("BL") 
-title <- ggdraw() + draw_label("Batch Low (BL) Writing Times", fontface='bold') 
+title <- ggdraw() + draw_label("Batch Nothing (BN) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
 save_plot("BL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 

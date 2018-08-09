@@ -23,7 +23,7 @@ library(grid)
 library(gridExtra) 
 
 # change the path to fit your needs 
-full_df <- read_csv("~/Desktop/full_df.csv", col_types = cols()) 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 gender_df <- read_csv("~/Desktop/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
 gender_df <- gender_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
 names(gender_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
@@ -44,6 +44,8 @@ plot_gender <- function() {
       mutate(Condition = factor(Condition, levels = c("IH", "BH", "IL", "BL"))) %>% 
       mutate(Gender = factor(Gender, levels = c("Male", "Female"))) %>% 
       group_by(Condition) 
+  
+  levels(new_df$Condition) <- c("IF", "BF", "IN", "BN") 
   
   # plot the bar graph 
   print(new_df %>% 

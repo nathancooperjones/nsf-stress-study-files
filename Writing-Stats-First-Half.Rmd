@@ -34,13 +34,13 @@ library(scales)
 library(wesanderson) 
 
 # READING IN CSV FILES 
-result_df <- read_csv("testing_df.csv", col_types = cols()) 
+result_df <- read_csv("@Datasets/testing_df.csv", col_types = cols()) 
 result_df <- result_df %>% 
   mutate(Condition = factor(Condition, levels = c("BL", "IL", "BH", "IH"))) %>% 
   filter(Measurement == "PP") 
 colnames(result_df)[which(names(result_df) == "Condition")] <- "Group" 
 
-essay_score_df <- read_csv("essay_score_master_file.csv", col_types = cols()) 
+essay_score_df <- read_csv("@Datasets/essay_score_master_file.csv", col_types = cols()) 
 names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
                            "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
 essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
@@ -51,9 +51,9 @@ essay_score_df <- essay_score_df %>%
   mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
   mutate(Session = factor(Session, levels = c("WB", "DT"))) 
 
-nlp_df <- read_csv("essay_nlp_results.csv", col_types = cols()) 
+nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
+colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
@@ -64,6 +64,12 @@ full_nlp_df <- full_nlp_df %>%
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+full_nlp_df <- full_nlp_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+levels(full_df$Group) <- c("BN", "IN", "BF", "IF") 
+levels(full_nlp_df$Group) <- c("BN", "IN", "BF", "IF") 
 
 # CREATING LINEAR MODEL 
 fit_normalized_errors_wc <- lme(NormalizedErrorWC ~ 1 + Group + Session, data = full_nlp_df, random = ~1|Subject, na.action = na.omit) 

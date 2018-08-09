@@ -31,7 +31,12 @@ print_output <- function(output, cex = 0.7) {
   text(0, 1, paste(tmp, collapse='\n'), adj = c(0,1), family = 'mono', cex = cex) 
 } 
 
-essay_df <- read_csv("essay_nlp_results.csv", col_types = cols()) 
+essay_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
+
+essay_df <- essay_df %>% 
+  mutate(Condition = factor(Condition, levels = c("IH", "IL", "BH", "BL"))) 
+levels(essay_df$Condition) <- c("IF", "IN", "BF", "BN") 
+
 
 wb_essay_df <- essay_df %>% 
   filter(Report == "WB") 
