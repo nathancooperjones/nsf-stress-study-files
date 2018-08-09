@@ -39,7 +39,7 @@ e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067')
 
-error <- ''
+data_error <- ''
 
 discarded_df <- tibble()
 non_processed_df <- tibble()
@@ -102,6 +102,13 @@ getAllDirectoryList <- function(directory) {
 
 getMatchedFileNamesFullPath <- function(directory, file_pattern) {
   return(list.files(path=directory, pattern=file_pattern, recursive=F, full.names=T))
+}
+
+getKnownError <- function(subj_name) {
+  if(subj_name %in% list('T062')) {
+    return('No data at Session Marker File')
+  }
+  return('')
 }
 
 copyReExtractedDataToNsfDir <- function() {
@@ -211,10 +218,11 @@ splitSessions <- function(session_dir, subj_name) {
   subj_interface_file_name <- getMatchedFileNames(session_dir, subj_interface_file_pattern)
   marker_file_name <- getFileNameByNewOldPattern(session_dir, marker_file_pattern, marker_new_file_pattern)
   
+  data_error <<- getKnownError(subj_name)
   if(isEmpty(subj_interface_file_name)) {
-    error <<- 'Excel File Unavailable'
+    data_error <<- 'Excel File Unavailable'
   } else if(isEmpty(marker_file_name)) {
-    error <<- 'Session Marker File Unavailable'
+    data_error <<- 'Session Marker File Unavailable'
   }
   
   subj_interface_df <- readWorksheet(XLConnect::loadWorkbook(file.path(session_dir, subj_interface_file_name)), sheet = 'Sheet1')
@@ -410,13 +418,13 @@ splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
   # sapply(grp_list, function(grp_name) {
-  sapply(grp_list[2], function(grp_name) {
+  sapply(grp_list[3], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
-    sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[3], function(subj_name) {
+    # sapply(subj_list, function(subj_name) {
+    sapply(subj_list[6], function(subj_name) {
       
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -443,7 +451,7 @@ splitSessionsForPP <- function() {
         },
         error=function(cond) {
           
-          temp_non_processed_df <- tibble("Subject" = subj_name, "Error" = error)
+          temp_non_processed_df <- tibble("Subject" = subj_name, "Error" = data_error)
           
           if (nrow(non_processed_df) == 0) {
             non_processed_df <<- temp_non_processed_df
