@@ -2,9 +2,6 @@
 #devtools::install_github("statsmaths/coreNLP") 
 #install.packages('rJava') 
 
-current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
-setwd(current_dir) 
-
 options(java.parameters = "-Xmx4096m") 
 library(rJava) 
 library(tidyverse) 
@@ -21,6 +18,8 @@ library(cowplot)
 # Point this to the nsf-stress-study directory. 
 # setwd("~/Desktop/")
 
+# current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
+# setwd(current_dir) 
 current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd(current_dir)
 
@@ -185,25 +184,29 @@ find_subjects("IH")
 title <- ggdraw() + draw_label("Intermittent Filler (IF) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("IH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+# save_plot("IH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/IH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## IL 
 find_subjects("IL") 
 title <- ggdraw() + draw_label("Intermittent Nothing (IN) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("IL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+# save_plot("IL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/IH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BH 
 find_subjects("BH") 
 title <- ggdraw() + draw_label("Batch Filler (BF) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("BH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+# save_plot("BH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/BH_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BL 
 find_subjects("BL") 
 title <- ggdraw() + draw_label("Batch Nothing (BN) Writing Times", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("BL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+# save_plot("BL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/BL_writing_times.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 

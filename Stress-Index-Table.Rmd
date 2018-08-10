@@ -1,8 +1,8 @@
 ---
 title: "Stress Index Table"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 

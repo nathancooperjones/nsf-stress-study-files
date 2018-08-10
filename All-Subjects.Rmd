@@ -292,13 +292,22 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       } 
       if (col_name == "PP") { 
         bad_subjects <- c(bad_subjects, "T081") 
-      } 
-      if (col_name == "PP" & condition == "IH") { 
         bad_subjects <- c(bad_subjects, "T126") 
+        bad_subjects <- c(bad_subjects, "T097") 
+        bad_subjects <- c(bad_subjects, "T093") 
+        bad_subjects <- c(bad_subjects, "T136") 
+        bad_subjects <- c(bad_subjects, "T173") 
+        bad_subjects <- c(bad_subjects, "T108") 
       } 
-      if (col_name == "PP" & sess == "StressCondition" & condition == "IH") { 
-        bad_subjects <- c(bad_subjects, "T064") 
-      } 
+      # if (col_name == "PP" & condition == "IH") { 
+      #   bad_subjects <- c(bad_subjects, "T126") 
+      # } 
+      # if (col_name == "PP" & sess == "StressCondition" & condition == "IH") { 
+      #   bad_subjects <- c(bad_subjects, "T064") 
+      # } 
+      if (col_name == "PP" & sess == "StressCondition") {
+        bad_subjects <- c(bad_subjects, "T064")
+      }
       if (col_name == "PP" & condition == "IL") { 
         bad_subjects <- c(bad_subjects, "T097") 
       } 
@@ -532,6 +541,7 @@ emails_df <- emails_df[ , c("Subject", "Email.1.Open.Email.Time", "Email.2.Open.
 
 # Last but not least, we write this big ol' global tibble to a .csv file so we can access it for every other script we have to run! 
 write.table(result_df, file = "@Datasets/full_df.csv", row.names=F, sep = ',') 
+# write.table(result_df, file = "@Datasets/physiological_data.csv", row.names=F, sep = ',') 
 # We also write this email dataframe for someone to look at later - who knows?! 
 write.table(emails_df, file = "@Datasets/email_df.csv", row.names=F, sep = ',') 
 
