@@ -39,7 +39,11 @@ e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067')
 
-discarded_df <- tibble() 
+data_error <- ''
+
+discarded_df <- tibble()
+non_processed_df <- tibble()
+
 if (length(discarded_subj_list) > 0) { 
   for (discarded_subj in discarded_subj_list) { 
     if (nrow(discarded_df) == 0) { 
@@ -98,6 +102,13 @@ getAllDirectoryList <- function(directory) {
 
 getMatchedFileNamesFullPath <- function(directory, file_pattern) {
   return(list.files(path=directory, pattern=file_pattern, recursive=F, full.names=T))
+}
+
+getKnownError <- function(subj_name) {
+  if(subj_name %in% list('T062')) {
+    return('No data at Session Marker File')
+  }
+  return('')
 }
 
 copyReExtractedDataToNsfDir <- function() {
@@ -205,9 +216,17 @@ splitSessions <- function(session_dir, subj_name) {
   
   subj_interface_file_pattern <- paste0('.*-', subj_name, '.xlsx')
   subj_interface_file_name <- getMatchedFileNames(session_dir, subj_interface_file_pattern)
+  marker_file_name <- getFileNameByNewOldPattern(session_dir, marker_file_pattern, marker_new_file_pattern)
+  
+  data_error <<- getKnownError(subj_name)
+  if(isEmpty(subj_interface_file_name)) {
+    data_error <<- 'Excel File Unavailable'
+  } else if(isEmpty(marker_file_name)) {
+    data_error <<- 'Session Marker File Unavailable'
+  }
+  
   subj_interface_df <- readWorksheet(XLConnect::loadWorkbook(file.path(session_dir, subj_interface_file_name)), sheet = 'Sheet1')
   
-  marker_file_name <- getFileNameByNewOldPattern(session_dir, marker_file_pattern, marker_new_file_pattern)
   marker_df <- read.csv(file.path(session_dir, marker_file_name))
   marker_df <- convertTimestampSessionMarkers(marker_df, subj_interface_df, subj_name) 
   
@@ -217,19 +236,22 @@ splitSessions <- function(session_dir, subj_name) {
   presentation_start_time <- convert_s_interface_date(marker_df$startTimestamp[2])
   presentation_end_time <- convert_s_interface_date(marker_df$EndTimestamp[2])
   
-  
   baseline_essay_start_time <- convert_date(subj_interface_df$Baseline.Essay.Timestamp[1], subj_interface_date_format)
-  date(baseline_essay_start_time) <- as.Date(rb_start_time)
-  baseline_essay_end_time <- baseline_essay_start_time + 5*60
-  
   stress_cond_start_time <- convert_date(subj_interface_df$Stress.Condition.Timestamp[1], subj_interface_date_format)
-  date(stress_cond_start_time) <- as.Date(rb_start_time)
-  stress_cond_end_time <- stress_cond_start_time + 5*60
-  
   dual_task_start_time <- convert_date(subj_interface_df$Dual.Essay.Timestamp[1], subj_interface_date_format)
+  
+  date(baseline_essay_start_time) <- as.Date(rb_start_time)
+  date(stress_cond_start_time) <- as.Date(rb_start_time)
   date(dual_task_start_time) <- as.Date(rb_start_time)
+  
+  baseline_essay_end_time <- baseline_essay_start_time + 5*60
+  stress_cond_end_time <- stress_cond_start_time + 5*60
   dual_task_end_time <- dual_task_start_time + 50*60
   
+  # print(difftime(dual_task_start_time, stress_cond_start_time, units = "min"))
+  # if(difftime(dual_task_start_time, stress_cond_start_time, units = "min") < 5) {
+  #   print(subj_name)
+  # }
   
   marker_time_df <- data.frame()
   marker_time_df <- getNextSessionRows('RestingBaseline', marker_time_df, rb_start_time, rb_end_time)
@@ -264,8 +286,6 @@ splitSessions <- function(session_dir, subj_name) {
     
     merged_df <- pp_with_session_df
   }
-  
-  
   
   ##########################################################################
   ######################## Merging Sensor Signals ##########################
@@ -396,13 +416,13 @@ splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
   sapply(grp_list, function(grp_name) {
-    # sapply(grp_list[1], function(grp_name) {
+  # sapply(grp_list[3], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-      # sapply(subj_list[3], function(subj_name) {
+    # sapply(subj_list[6], function(subj_name) {
       
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -428,6 +448,15 @@ splitSessionsForPP <- function() {
           
         },
         error=function(cond) {
+          
+          temp_non_processed_df <- tibble("Subject" = subj_name, "Error" = data_error)
+          
+          if (nrow(non_processed_df) == 0) {
+            non_processed_df <<- temp_non_processed_df
+          } else {
+            non_processed_df <<- rbind(non_processed_df, temp_non_processed_df)
+          }
+          
           write('----------------------------------------------------------', file=log.file, append=TRUE)
           write(paste0(grp_name, '-', subj_name, '-', session_name, ': ERROR!'), file=log.file, append=TRUE)
           write(paste0(cond, '\n'), file=log.file, append=TRUE)
@@ -439,6 +468,10 @@ splitSessionsForPP <- function() {
       })
     })
   })
+  
+  convert_to_csv(discarded_df, "./nsf-stress-study-scripts/@Datasets/discarded_HR.csv") 
+  convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv") 
+  
 }
 
 
@@ -446,17 +479,21 @@ splitSessionsForPP <- function() {
 #-------Main Program------#
 #-------------------------#
 # CHANGE THIS 
-#source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@RemoveNoise.R') 
-#source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
-current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
-setwd(current_dir) 
-source('@Scripts-Not-to-Run/@RemoveNoise.R') 
-source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
-setwd("~/Desktop/") 
+current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd(current_dir)
+
+source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@RemoveNoise.R') 
+source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
+
+# setwd("~/Desktop/") 
+# source('~/Desktop/nsf-stress-study-files/@RemoveNoise.R') 
+# source('~/Desktop/nsf-stress-study-files/@DownSampleTimeStamp.R')
+
+#source('@Scripts-Not-to-Run/@RemoveNoise.R') 
+#source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 
 
-#log_dir <- file.path(current_dir, 'log-files')
-log_dir <- file.path('~/Desktop/log-files')
+log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
 
@@ -467,4 +504,4 @@ file.create(filtered_log.file)
 copyReExtractedDataToNsfDir() 
 splitSessionsForPP() 
 
-convert_to_csv(discarded_df, "discarded_HR.csv") 
+
