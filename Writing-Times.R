@@ -19,7 +19,11 @@ library(cowplot)
 
 # CHANGE THIS! 
 # Point this to the nsf-stress-study directory. 
-setwd("~/Desktop/")
+# setwd("~/Desktop/")
+
+current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd(current_dir)
+
 data_dir <- 'nsf-stress-study' 
 super_session_pattern <- '^SuperSession$' 
 plots <- list() 

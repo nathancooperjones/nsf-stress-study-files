@@ -35,7 +35,7 @@ extrafont::loadfonts(quiet=TRUE)
 # CHANGE THIS 
 # Adjust the path to the `nsf-stress-study` directory or else no data and it is sad 
 # data_dir <- "~/Desktop/nsf-stress-study" 
-data_dir <- "~/Desktop/nsf-stress-study" 
+data_dir <- "T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study" 
 super_session_pattern <- "^SuperSession$" 
 
 # CHANGE THIS 
@@ -288,6 +288,7 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       } 
       if (col_name == "PP" & condition == "BH") { 
         bad_subjects <- c(bad_subjects, "T080") 
+        bad_subjects <- c(bad_subjects, "T173") 
       } 
       if (col_name == "PP") { 
         bad_subjects <- c(bad_subjects, "T081") 
