@@ -279,38 +279,45 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       # Go ahead and add additional subjects, measurements, and sessions that you want to filter out because they are so bad. 
       # Why not! 
       # Subject out of frame 
-      if (col_name == "PP" & sess == "StressCondition" & condition == "BH") { 
+      if (col_name == "PP" & condition == "BH" & sess == "StressCondition") { 
         bad_subjects <- c(bad_subjects, "T078") 
       } 
-      # Subject out of frame 
+      if (col_name == "PP" & condition == "IH" & sess == "StressCondition") {
+        bad_subjects <- c(bad_subjects, "T064")
+      }
       if (col_name == "PP" & condition == "IL") { 
         bad_subjects <- c(bad_subjects, "T153") 
       } 
       if (col_name == "PP" & condition == "BH") { 
         bad_subjects <- c(bad_subjects, "T080") 
+      } 
+      if (col_name == "PP" & condition == "BH") { 
         bad_subjects <- c(bad_subjects, "T173") 
       } 
-      if (col_name == "PP") { 
-        bad_subjects <- c(bad_subjects, "T081") 
+      if (col_name == "PP" & condition == "IH") { 
         bad_subjects <- c(bad_subjects, "T126") 
-        bad_subjects <- c(bad_subjects, "T097") 
-        bad_subjects <- c(bad_subjects, "T093") 
-        bad_subjects <- c(bad_subjects, "T136") 
-        bad_subjects <- c(bad_subjects, "T173") 
-        bad_subjects <- c(bad_subjects, "T108") 
-      } 
-      # if (col_name == "PP" & condition == "IH") { 
-      #   bad_subjects <- c(bad_subjects, "T126") 
-      # } 
-      # if (col_name == "PP" & sess == "StressCondition" & condition == "IH") { 
-      #   bad_subjects <- c(bad_subjects, "T064") 
-      # } 
-      if (col_name == "PP" & sess == "StressCondition") {
-        bad_subjects <- c(bad_subjects, "T064")
       }
       if (col_name == "PP" & condition == "IL") { 
         bad_subjects <- c(bad_subjects, "T097") 
       } 
+      if (col_name == "PP" & condition == "IL") { 
+        bad_subjects <- c(bad_subjects, "T093") 
+      }
+      if (col_name == "PP" & condition == "BH") { 
+        bad_subjects <- c(bad_subjects, "T136") 
+      }
+      if (col_name == "PP" & condition == "BL") { 
+        bad_subjects <- c(bad_subjects, "T173") 
+      }
+      if (col_name == "PP" & condition == "BL") { 
+        bad_subjects <- c(bad_subjects, "T108") 
+      }
+      # if (col_name == "PP") { 
+      #   bad_subjects <- c(bad_subjects, "T081") 
+      # } 
+
+
+
       
       # And here is the execution, first for out temporary dataframe for plotting... 
       filtered_df <- filtered_df %>% 

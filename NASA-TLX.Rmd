@@ -35,7 +35,7 @@ library(kableExtra)
 # Note: Try to run this with the most-recent version of the NASA data, downloaded off of somewhere on the internet. 
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 # nasa_df <- read_csv("~/Desktop/Stress_Project/Post-SurveyExport.csv", col_types = cols())
-nasa_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
+nasa_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
 
 # Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
 result_df <- full_df[ , c("Subject", "Condition", "Session")] 

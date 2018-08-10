@@ -5,7 +5,7 @@
 # install.packages('ngram')
 
 
-current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
+current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path)) 
 setwd(current_dir) 
 
 options(java.parameters = "-Xmx4096m") 
@@ -251,32 +251,32 @@ find_subjects("IH")
 title <- ggdraw() + draw_label("Intermittent Filler (IF) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("IH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/IH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## IL 
 find_subjects("IL") 
 title <- ggdraw() + draw_label("Intermittent Nothing (IN) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("IL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/IL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BH 
 find_subjects("BH") 
 title <- ggdraw() + draw_label("Batch Filler (BF) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("BH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/BH_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 ## BL 
 find_subjects("BL") 
 title <- ggdraw() + draw_label("Batch Nothing (BN) Essays", fontface='bold') 
 gg <- plot_grid(plotlist = plots, ncol = 3, align = "v", scale = 0.9) 
 gg <- plot_grid(title, gg, ncol = 1, align = "v", rel_heights=c(0.04, 1)) 
-save_plot("BL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
+save_plot("nsf-stress-study-scripts/BL_essays.pdf", gg, ncol = 2, base_height = 20, base_width = 7) 
 
 
 ## WRITE THE GRAND CSV 
-convert_to_csv(result_df, file.path('@Datasets/essay_nlp_results.csv')) 
+convert_to_csv(result_df, file.path('nsf-stress-study-scripts/@Datasets/essay_nlp_results.csv')) 
 
 
 ## ESSAY PROMPTS 
@@ -354,4 +354,4 @@ g2 <- dual_task_sent %>%
 title <- ggdraw() + draw_label("Sentimental Analysis of Essay Prompts", fontface='bold') 
 g <- plot_grid(g1, g2, ncol = 2, align = "v") 
 g <- plot_grid(title, g, ncol = 1, align = "v", rel_heights=c(0.1, 1)) 
-save_plot("essay_prompts.pdf", g) 
+save_plot("nsf-stress-study-scripts/essay_prompts.pdf", g) 
