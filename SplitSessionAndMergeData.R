@@ -287,8 +287,6 @@ splitSessions <- function(session_dir, subj_name) {
     merged_df <- pp_with_session_df
   }
   
-  
-  
   ##########################################################################
   ######################## Merging Sensor Signals ##########################
   ##########################################################################
@@ -417,14 +415,14 @@ splitSessions <- function(session_dir, subj_name) {
 splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
-  # sapply(grp_list, function(grp_name) {
-  sapply(grp_list[3], function(grp_name) {
+  sapply(grp_list, function(grp_name) {
+  # sapply(grp_list[3], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
-    # sapply(subj_list, function(subj_name) {
-    sapply(subj_list[6], function(subj_name) {
+    sapply(subj_list, function(subj_name) {
+    # sapply(subj_list[6], function(subj_name) {
       
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -471,8 +469,8 @@ splitSessionsForPP <- function() {
     })
   })
   
-  convert_to_csv(discarded_df, "discarded_HR.csv") 
-  convert_to_csv(non_processed_df, "non_processed_df.csv") 
+  convert_to_csv(discarded_df, "./nsf-stress-study-scripts/@Datasets/discarded_HR.csv") 
+  convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv") 
   
 }
 
@@ -484,8 +482,8 @@ splitSessionsForPP <- function() {
 current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd(current_dir)
 
-source('@RemoveNoise.R') 
-source('@DownSampleTimeStamp.R') 
+source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@RemoveNoise.R') 
+source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 
 # setwd("~/Desktop/") 
 # source('~/Desktop/nsf-stress-study-files/@RemoveNoise.R') 
