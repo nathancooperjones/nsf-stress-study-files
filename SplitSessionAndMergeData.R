@@ -446,16 +446,17 @@ splitSessionsForPP <- function() {
 #-------Main Program------#
 #-------------------------#
 # CHANGE THIS 
-source('~/Desktop/nsf-stress-study-files/@RemoveNoise.R') 
-source('~/Desktop/nsf-stress-study-files/@DownSampleTimeStamp.R') 
-#source('@Scripts-Not-to-Run/@RemoveNoise.R') 
-#source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
-# current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
-# setwd(current_dir) 
+#source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@RemoveNoise.R') 
+#source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
+current_dir <- dirname(rstudioapi::getSourceEditorContext()$path) 
+setwd(current_dir) 
+source('@Scripts-Not-to-Run/@RemoveNoise.R') 
+source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 setwd("~/Desktop/") 
 
 
-log_dir <- file.path(current_dir, 'log-files')
+#log_dir <- file.path(current_dir, 'log-files')
+log_dir <- file.path('~/Desktop/log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
 

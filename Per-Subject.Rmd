@@ -24,7 +24,7 @@ extrafont::loadfonts(quiet=TRUE)
 
 # CHANGE THIS 
 # You should know the drill by now. 
-full_df <- read_csv("full_df.csv", col_types = cols()) 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 
 # Don't make me say it. 
 isMatch <- function(pattern, str) { 

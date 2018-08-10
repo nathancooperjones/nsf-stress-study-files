@@ -42,6 +42,7 @@ library(kableExtra)
 # CHANGE THIS 
 # Go ahead, I will wait. 
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+full_df$HR <- as.numeric(full_df$HR) 
 stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols()) 
 
 # Setting up three (that's right, three!) whole global tibbles. Wow! 
