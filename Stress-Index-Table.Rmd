@@ -1,6 +1,8 @@
 ---
-title: "Stress Index Table" 
-output: html_document 
+title: "Stress Index Table"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
@@ -23,7 +25,8 @@ library(kableExtra)
 
 # CHANGE THIS 
 # Edit the path to the wonderful file you made in `AllSignals.Rmd`. You can do it! 
-full_df <- read_csv("full_df.csv", col_types = cols()) 
+# full_df <- read_csv("full_df.csv", col_types = cols()) 
+full_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study-scripts/@Datasets/full_df.csv", col_types = cols()) 
 result_df <- tibble() 
 
 # I already covered this in `AllSignals.Rmd`. In the future, if I don't comment it, then assume it is either really simple or 
@@ -270,7 +273,13 @@ find_subjects()
 format_final_df() 
 
 # This is very fancy, and prints the table in a nice way that doesn't get messed up by variable-length column values. 
-knitr::kable(tbl_df(result_df %>% mutate(Group = factor(Group, levels = c("IH", "BH", "IL", "BL", "...."))) %>% arrange(Group))) %>% 
+result_df <- result_df %>% 
+  mutate(Group = factor(Group, levels = c("IH", "BH", "IL", "BL", "...."))) %>% 
+  arrange(Group) 
+
+levels(result_df$Group) <- c("IF", "BF", "IN", "BN", "....") 
+
+knitr::kable(result_df) %>% 
   kable_styling(bootstrap_options = "striped", font_size = 10.21) 
 
 ```
@@ -280,8 +289,8 @@ knitr::kable(tbl_df(result_df %>% mutate(Group = factor(Group, levels = c("IH", 
 <hr> 
 
 Evaluating Criteria:  
-✅: Groups `IH` and `BH` have `Resting Baseline` (⚫) as the lowest mean value.  
-✅: Groups `IL` and `BL` have `Resting Baseline` (⚫) or `Break`(🔶) as the lowest mean value.  
+✅: Groups `IF` and `BF` have `Resting Baseline` (⚫) as the lowest mean value.  
+✅: Groups `BN` and `BN` have `Resting Baseline` (⚫) or `Break`(🔶) as the lowest mean value.  
 ❌: Above conditions NOT met. 
   
   

@@ -41,8 +41,10 @@ library(kableExtra)
 
 # CHANGE THIS 
 # Go ahead, I will wait. 
-full_df <- read_csv("full_df.csv", col_types = cols()) 
-stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols()) 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+# stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols())
+stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols()) 
+
 
 # Setting up three (that's right, three!) whole global tibbles. Wow! 
 result_df <- tibble() 
@@ -1385,5 +1387,5 @@ kable(((t_test_df[ , !(names(t_test_df) %in% c("Name"))]
 ``` 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
-write.table(final_testing_df, file = "testing_df.csv", row.names=F, sep = ',') 
+write.table(final_testing_df, file = "@Datasets/testing_df.csv", row.names=F, sep = ',') 
 ``` 
