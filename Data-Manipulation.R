@@ -43,6 +43,10 @@ update_manual_edit_list('T005', msg_half_screen)
 update_manual_edit_list('T006', msg_video_error)
 update_manual_edit_list('T009', msg_half_screen)
 update_manual_edit_list('T016', msg_half_screen)
+
+# update_manual_edit_list('T005', msg_half_screen, '1min 55sec', '1min 40sec', '1min 31sec', 'No!')
+# update_manual_edit_list('T006', msg_video_error, '39sec', '1min 4sec', '2min 27sec', 'No!')
+
 update_manual_edit_list('T019', msg_processed, '32sec', '30sec', '1min 19sec', 'Yes')
 update_manual_edit_list('T021', msg_processed, '20sec', '40sec', '1min 47sec', 'Yes')
 update_manual_edit_list('T031', msg_processed, '28sec', '21sec', '2min 9sec', 'Yes')
