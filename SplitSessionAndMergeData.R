@@ -429,7 +429,7 @@ splitSessionsForPP <- function() {
       session_list <- session_list[isMatchedString(super_session_pattern, session_list)]
       
       sapply(session_list, function(session_name) {
-        # sapply(session_list[3], function(session_name) {
+      # sapply(session_list[3], function(session_name) {
         
         session_dir <- file.path(getwd(), subj_dir, session_name)
         
