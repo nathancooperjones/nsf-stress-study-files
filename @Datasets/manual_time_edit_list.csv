@@ -1,25 +1,25 @@
-"Subject","Status","BW_Latency","SC_Latency","DT_Latency","Aws_Updated"
-"T003","Half Screen Captured, No Sound","","","",""
-"T005","Half Screen Captured, No Sound","","","",""
-"T006","Could not render the video","","","",""
-"T009","Half Screen Captured, No Sound","","","",""
-"T016","Half Screen Captured, No Sound","","","",""
-"T019","Processed","32sec","30sec","1min 19sec","Yes"
-"T021","Processed","20sec","40sec","1min 47sec","Yes"
-"T031","Processed","28sec","21sec","2min 9sec","Yes"
-"T032","Processed","1min 8sec","20sec","1min 10sec","Yes"
-"T046","Processed","34sec","9sec","1min","Yes"
-"T047","Processed","22sec","23sec","11min 12sec","Yes"
-"T051","Processed","43sec","20sec","1min 28sec","Yes"
-"T061","Processed","34sec","3min 18sec","14sec","Yes"
-"T063","Processed","35sec","3min 11sec","29sec","Yes"
-"T064","Processed","32sec","3min 11sec","20sec","Yes"
-"T065","Processed","38sec","3min 33sec","20sec","Yes"
-"T066","Processed","52sec","3min 17sec","15sec","Yes"
-"T067","Could not render the video","","","",""
-"T076","Processed","6min 40sec","3min 33sec","2min 13sec","Yes"
-"T077","Processed","40sec","2min 51sec","12sec","Yes"
-"T078","Processed","50sec","2min 53sec","12sec","Yes"
-"T079","Processed","34sec","3min 2sec","56sec","Yes"
-"T080","Could not render the video","","","",""
-"T124","Could not render the video","","","",""
+Subject,Status,BW_Latency,SC_Latency,DT_Latency,Aws_Updated
+T003,"Half Screen Captured, No Sound",,,,
+T005,"Half Screen Captured, No Sound",,,,
+T006,Could not render the video,,,,
+T009,"Half Screen Captured, No Sound",,,,
+T016,"Half Screen Captured, No Sound",,,,
+T019,Processed,32sec,30sec,1min 19sec,Yes
+T021,Processed,20sec,40sec,1min 47sec,Yes
+T031,Processed,28sec,21sec,2min 9sec,Yes
+T032,Processed,1min 8sec,20sec,1min 10sec,Yes
+T046,Processed,34sec,9sec,1min,Yes
+T047,Processed,22sec,23sec,11min 12sec,Yes
+T051,Processed,43sec,20sec,1min 28sec,Yes
+T061,Processed,34sec,3min 18sec,14sec,Yes
+T063,Processed,35sec,3min 11sec,29sec,Yes
+T064,Processed,32sec,3min 11sec,20sec,Yes
+T065,Processed,38sec,3min 33sec,20sec,Yes
+T066,Processed,52sec,3min 17sec,15sec,Yes
+T067,Could not render the video,,,,
+T076,Processed,6min 40sec,3min 33sec,2min 13sec,Yes
+T077,Processed,40sec,2min 51sec,12sec,Yes
+T078,Processed,50sec,2min 53sec,12sec,Yes
+T079,Processed,34sec,3min 2sec,56sec,Yes
+T080,Could not render the video,,,,
+T124,Could not render the video,,,,
