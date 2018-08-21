@@ -93,6 +93,10 @@ isEmptyDataFrame <- function(df) {
 }
 
 getMatchedFileNames <- function(directory, file_pattern) {
+  return(list.files(path=directory, pattern=file_pattern, recursive=F))
+}
+
+getMatchedFileNamesRecursively <- function(directory, file_pattern) {
   return(list.files(path=directory, pattern=file_pattern, recursive=T))
 }
 
@@ -211,12 +215,15 @@ splitSessions <- function(session_dir, subj_name) {
   merged_df <- data.frame()
   file_name <- getMatchedFileNames(session_dir, common_file_pattern)[[1]][1]
   
-  pp_file_name <- getFileNameByNewOldPattern(session_dir, pp_file_pattern, pp_new_file_pattern)
+  pp_file_name <- getMatchedFileNames(session_dir, pp_file_pattern)
   nr_pp_file_name <- getMatchedFileNames(session_dir, nr_pp_file_pattern)
   
   subj_interface_file_pattern <- paste0('.*-', subj_name, '.xlsx')
   subj_interface_file_name <- getMatchedFileNames(session_dir, subj_interface_file_pattern)
-  marker_file_name <- getFileNameByNewOldPattern(session_dir, marker_file_pattern, marker_new_file_pattern)
+  marker_file_name <- getMatchedFileNames(session_dir, marker_file_pattern)
+  
+  # pp_file_name <- getFileNameByNewOldPattern(session_dir, pp_file_pattern, pp_new_file_pattern)
+  # marker_file_name <- getMatchedFileNames(session_dir, marker_file_pattern, marker_new_file_pattern)
   
   data_error <<- getKnownError(subj_name)
   if(isEmpty(subj_interface_file_name)) {
@@ -291,7 +298,7 @@ splitSessions <- function(session_dir, subj_name) {
   ######################## Merging Sensor Signals ##########################
   ##########################################################################
   #-------------------------------------------------------------------------------------------- ZEPHYR
-  zephyr_file_name <- getMatchedFileNames(session_dir, summary_file_pattern)
+  zephyr_file_name <- getMatchedFileNamesRecursively(session_dir, summary_file_pattern)
   
   if(!isEmpty(zephyr_file_name)) {
     ### Read only Time, HR and BR 
@@ -344,7 +351,7 @@ splitSessions <- function(session_dir, subj_name) {
   
   
   #-------------------------------------------------------------------------------------------- EMPATICA
-  e4_file_list <- getMatchedFileNames(session_dir, e4_file_pattern)
+  e4_file_list <- getMatchedFileNamesRecursively(session_dir, e4_file_pattern)
   for(e4_file_name in e4_file_list) {
     # merged_df <- sapply(e4_file_list, function(e4_file_name) { 
     e4_df <- read_csv(file.path(session_dir, e4_file_name), col_names=F, col_types = cols())
@@ -416,13 +423,13 @@ splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
   sapply(grp_list, function(grp_name) {
-  # sapply(grp_list[3], function(grp_name) {
+  # sapply(grp_list[1], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[6], function(subj_name) {
+    # sapply(subj_list[3], function(subj_name) {
       
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -492,7 +499,7 @@ source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@DownSampleTimeStamp.R')
 #source('@Scripts-Not-to-Run/@RemoveNoise.R') 
 #source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 
-
+# log_dir <- file.path('~/Desktop/log-files')
 log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
@@ -501,7 +508,7 @@ filtered_log.file <- file.path(log_dir, paste0('split-sessions-filtered-subjects
 file.create(filtered_log.file) 
 
 
-copyReExtractedDataToNsfDir() 
+# copyReExtractedDataToNsfDir()
 splitSessionsForPP() 
 
 
