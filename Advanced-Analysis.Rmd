@@ -339,10 +339,10 @@ colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session"
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
-full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
-full_nlp_df <- full_nlp_df %>% 
-  mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
-  mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+# full_nlp_df <- full_nlp_df %>% 
+#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 
@@ -914,10 +914,10 @@ colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session"
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
-full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
-full_nlp_df <- full_nlp_df %>% 
-  mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
-  mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+# full_nlp_df <- full_nlp_df %>% 
+#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 

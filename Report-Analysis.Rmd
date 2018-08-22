@@ -39,7 +39,7 @@ levels(essay_df$Condition) <- c("IF", "IN", "BF", "BN")
 
 
 wb_essay_df <- essay_df %>% 
-  filter(Report == "WB") 
+  filter(Essay == "WB") 
 
 wb_essay_df %>% 
   ggplot(aes(x = Condition, y = WordCount)) + 
@@ -80,7 +80,7 @@ print_output(TukeyHSD(anova_test))
 cat("  \n  ") 
 
 dt_essay_df <- essay_df %>% 
-  filter(Report == "DT") 
+  filter(Essay == "DT") 
 
 dt_essay_df %>% 
   ggplot(aes(x = Condition, y = WordCount)) + 
