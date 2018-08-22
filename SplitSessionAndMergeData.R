@@ -31,7 +31,7 @@ one_hour_sec <- 60*60
 common_file_pattern <- '.*_pp.csv|.*_ks.csv'
 pp_file_pattern <- '.*_pp.csv'
 pp_new_file_pattern <- '.*_pp_new.csv'
-nr_pp_file_pattern <- '.*pp_nr.csv'
+nr_pp_file_pattern <- '.*_nr.csv'
 marker_file_pattern <- '.*_sessionmarkers.csv'
 marker_new_file_pattern <- '.*_sessionmarkers_new.csv'
 summary_file_pattern <- '.*_Summary.csv'
@@ -280,7 +280,7 @@ splitSessions <- function(session_dir, subj_name) {
       
       downsampled_pp_df <- downsampled_pp_df[, c(1, 4, 2, 3)]
       names(downsampled_pp_df)[names(downsampled_pp_df) == 'Timestamp'] <- 'CovertedTime'
-      convert_to_csv(downsampled_pp_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-4), '_nr.csv')))
+      convert_to_csv(downsampled_pp_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_pp_nr.csv')))
       
     } else {
       print(file.path(session_dir, nr_pp_file_name))
@@ -444,6 +444,8 @@ splitSessionsForPP <- function() {
           if(!(subj_name %in% discarded_subj_list)) {
             # print(subj_name)
             splitSessions(session_dir, subj_name)
+            
+            # print(getMatchedFileNames(session_dir, pp_file_pattern)[[1]][1]) 
             
             write(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'), file=log.file, append=TRUE)
             message(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'))
