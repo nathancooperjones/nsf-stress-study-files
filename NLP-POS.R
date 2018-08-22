@@ -94,6 +94,7 @@ convert_to_csv <- function(df, file_path) {
 
 
 find_subjects <- function(cond) { 
+
   plots <<- list() 
   
   grp_list <- getAllDirectoryList(data_dir) 
@@ -144,10 +145,16 @@ find_subjects <- function(cond) {
 
 
 
-doCoreNLP <- function(session_dir, subj_name, cond) { 
+doCoreNLP <- function(session_dir, subj_name, cond) {
+  # CHECK WHY THE PLOTS ARE EMPTY
+  # print('------------------------------')
+  # print(paste0('.*-', subj_name, '.xlsx'))
+  # print(session_dir)
+  # print(getMatchedFileNames(session_dir, subj_interface_file_pattern))
   
   subj_interface_file_pattern <- paste0('.*-', subj_name, '.xlsx') 
   subj_interface_file_name <- getMatchedFileNames(session_dir, subj_interface_file_pattern) 
+
   
   ## FIGURE OUT THE CONDITION 
   condition <- NA 
@@ -160,6 +167,7 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
   } else if (isMatch(subj_interface_file_name, "batch-low")) { 
     condition <- "BL" 
   } 
+  
   
   if (condition != cond) { 
     return() 
@@ -227,7 +235,6 @@ doCoreNLP <- function(session_dir, subj_name, cond) {
   g3 <- plot_grid(g1, g2, ncol = 2, align = "v") 
   
   plots[[length(plots)+1]] <<- g3 
-  
 } 
 
 
