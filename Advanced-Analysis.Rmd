@@ -1270,3 +1270,67 @@ print(summary(eight_star_fit))
 #   kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
 
 ``` 
+
+\newpage 
+Hey! Let's ANOVA! 
+----- 
+
+Our ANOVA Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Stress Factor + Intermittent Factor 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, PP, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session %in% c("DT.RB")) %>% 
+  filter(Measurement == "PP") 
+levels(diff_df$Session) <- c("WB", "B", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# making the groups super dumbed down to do the analysis 
+diff_df$StressFactor <- NA 
+diff_df[diff_df$Group == "IF" | diff_df$Group == "BF", "StressFactor"] <- "High" 
+diff_df[diff_df$Group == "IN" | diff_df$Group == "BN", "StressFactor"] <- "Low" 
+diff_df[diff_df$Group == "IF" | diff_df$Group == "IN", "IntermittentFactor"] <- "Intermittent" 
+diff_df[diff_df$Group == "BF" | diff_df$Group == "BN", "IntermittentFactor"] <- "Non-Intermittent" 
+
+diff_df <- diff_df %>% 
+  mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 
+
+# CREATING THE ANOVA MODELS 
+anova_model <- aov(PP ~ 1 + StressFactor + IntermittentFactor, data = diff_df, na.action = na.omit) #, random = ~1|Subject) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(anova_model)) 
+
+TukeyHSD(anova_model) 
+
+``` 
+
+\newpage 
+Hey! Let's ANOVA 2: With Interaction Effects 
+----- 
+
+Our ANOVA Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Stress Factor + Intermittent Factor + Stress Factor*Intermittent Factor 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# CREATING THE ANOVA MODELS 
+anova_model <- aov(PP ~ 1 + StressFactor*IntermittentFactor, data = diff_df, na.action = na.omit) #, random = ~1|Subject) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(anova_model)) 
+
+TukeyHSD(anova_model) 
+
+``` 
