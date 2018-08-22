@@ -478,8 +478,10 @@ splitSessionsForPP <- function() {
     })
   })
   
-  convert_to_csv(discarded_df, "./nsf-stress-study-scripts/@Datasets/discarded_HR.csv") 
-  convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv") 
+  #convert_to_csv(discarded_df, "/nsf-stress-study-scripts/@Datasets/discarded_HR.csv") 
+  #convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv") 
+  convert_to_csv(discarded_df, "./nsf-stress-study-files/@Datasets/discarded_HR.csv") 
+  convert_to_csv(non_processed_df, "./nsf-stress-study-files/@Datasets/non_processed_df.csv") 
   
 }
 
@@ -488,15 +490,13 @@ splitSessionsForPP <- function() {
 #-------Main Program------#
 #-------------------------#
 # CHANGE THIS 
-current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
-setwd(current_dir)
 
-source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@RemoveNoise.R') 
-source('./nsf-stress-study-scripts/@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
+#source('@Scripts-Not-to-Run/@RemoveNoise.R') 
+#source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 
-# setwd("~/Desktop/") 
-# source('~/Desktop/nsf-stress-study-files/@RemoveNoise.R') 
-# source('~/Desktop/nsf-stress-study-files/@DownSampleTimeStamp.R')
+setwd("~/Desktop/") 
+source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@RemoveNoise.R') 
+source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStamp.R')
 
 #source('@Scripts-Not-to-Run/@RemoveNoise.R') 
 #source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 

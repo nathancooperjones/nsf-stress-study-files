@@ -30,8 +30,8 @@ testing_df <- testing_df %>%
 levels(testing_df$Condition) <- c("BN", "IN", "BF", "IF") 
 colnames(testing_df)[which(names(testing_df) == "Condition")] <- "Group" 
 
-# age_df <- read_csv("~/Desktop/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
-age_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
+age_df <- read_csv("~/Documents/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
+# age_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
 age_df <- age_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
 names(age_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
 
@@ -335,7 +335,7 @@ essay_score_df <- essay_score_df %>%
 
 nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
@@ -910,7 +910,7 @@ essay_score_df <- essay_score_df %>%
 
 nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 

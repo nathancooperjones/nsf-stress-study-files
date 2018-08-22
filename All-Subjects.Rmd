@@ -34,8 +34,8 @@ extrafont::loadfonts(quiet=TRUE)
 
 # CHANGE THIS 
 # Adjust the path to the `nsf-stress-study` directory or else no data and it is sad 
-# data_dir <- "~/Desktop/nsf-stress-study" 
-data_dir <- "T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study" 
+data_dir <- "~/Desktop/nsf-stress-study" 
+# data_dir <- "T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study" 
 super_session_pattern <- "^SuperSession$" 
 
 # CHANGE THIS 
