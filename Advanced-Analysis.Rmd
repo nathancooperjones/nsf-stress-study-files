@@ -1289,7 +1289,7 @@ names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.R
 diff_df <- diff_df %>% 
   gather(Session, PP, -names) %>% 
   mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
-  filter(Session %in% c("DT.RB")) %>% 
+  filter(Session == "DT.RB") %>% 
   filter(Measurement == "PP") 
 levels(diff_df$Session) <- c("WB", "B", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
 # making the groups super dumbed down to do the analysis 
@@ -1300,7 +1300,9 @@ diff_df[diff_df$Group == "IF" | diff_df$Group == "IN", "IntermittentFactor"] <- 
 diff_df[diff_df$Group == "BF" | diff_df$Group == "BN", "IntermittentFactor"] <- "Non-Intermittent" 
 
 diff_df <- diff_df %>% 
-  mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 
+  mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) %>% 
+  mutate(StressFactor = factor(StressFactor, levels = c("Low", "High"))) %>% 
+  mutate(IntermittentFactor = factor(IntermittentFactor, levels = c("Non-Intermittent", "Intermittent"))) 
 
 # CREATING THE ANOVA MODELS 
 anova_model <- aov(PP ~ 1 + StressFactor + IntermittentFactor, data = diff_df, na.action = na.omit) #, random = ~1|Subject) 
