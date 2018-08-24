@@ -501,8 +501,8 @@ source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStam
 #source('@Scripts-Not-to-Run/@RemoveNoise.R') 
 #source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
 
-# log_dir <- file.path('~/Desktop/log-files')
-log_dir <- file.path(current_dir, 'log-files')
+log_dir <- file.path('~/Desktop/log-files')
+# log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
 
