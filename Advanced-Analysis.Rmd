@@ -30,10 +30,10 @@ testing_df <- testing_df %>%
 levels(testing_df$Condition) <- c("BN", "IN", "BF", "IF") 
 colnames(testing_df)[which(names(testing_df) == "Condition")] <- "Group" 
 
-# age_df <- read_csv("~/Desktop/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
-age_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
-age_df <- age_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
-names(age_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
+# age_df <- read_csv("~/Documents/Stress_Project/Pre-SurveyExport.csv", col_types = cols()) 
+# age_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
+# age_df <- age_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
+# names(age_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
 
 full_no_changing_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 
@@ -335,7 +335,7 @@ essay_score_df <- essay_score_df %>%
 
 nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
@@ -910,7 +910,7 @@ essay_score_df <- essay_score_df %>%
 
 nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
 nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
+colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
@@ -1268,5 +1268,92 @@ print(summary(eight_star_fit))
 
 # kable(full_df[ , c("Subject", "PP", "ETSScore", "Group", "Activity")], format = "latex", longtable = TRUE) %>% 
 #   kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+
+``` 
+
+\newpage 
+Hey! Let's ANOVA! 
+----- 
+
+Our ANOVA Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Stress Factor + Intermittent Factor 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+diff_df <- testing_df[ , c(1:3, 9:18)] 
+names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
+diff_df <- diff_df %>% 
+  gather(Session, PP, -names) %>% 
+  mutate(Session = factor(Session, levels = c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))) %>% 
+  filter(Session == "DT.RB") %>% 
+  filter(Measurement == "PP") 
+levels(diff_df$Session) <- c("WB", "B", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P.WB", "P.SC", "P.DT") 
+# making the groups super dumbed down to do the analysis 
+diff_df$StressFactor <- NA 
+diff_df[diff_df$Group == "IF" | diff_df$Group == "BF", "StressFactor"] <- "High" 
+diff_df[diff_df$Group == "IN" | diff_df$Group == "BN", "StressFactor"] <- "Low" 
+diff_df[diff_df$Group == "IF" | diff_df$Group == "IN", "IntermittentFactor"] <- "Intermittent" 
+diff_df[diff_df$Group == "BF" | diff_df$Group == "BN", "IntermittentFactor"] <- "Non-Intermittent" 
+
+diff_df <- diff_df %>% 
+  mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) %>% 
+  mutate(StressFactor = factor(StressFactor, levels = c("Low", "High"))) %>% 
+  mutate(IntermittentFactor = factor(IntermittentFactor, levels = c("Non-Intermittent", "Intermittent"))) 
+
+# CREATING THE ANOVA MODELS 
+anova_model <- aov(PP ~ 1 + StressFactor + IntermittentFactor, data = diff_df, na.action = na.omit) #, random = ~1|Subject) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(anova_model)) 
+
+TukeyHSD(anova_model) 
+
+``` 
+
+\newpage 
+Now a Linear Model Very Close to the ANOVA One Above: 
+----- 
+
+Our Linear Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Stress Indicator + Intermittency Indicator + 1|Subjects 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# CREATING THE ANOVA MODELS 
+lme_model <- lme(PP ~ 1 + StressFactor + IntermittentFactor, data = diff_df,random = ~1|Subject,  na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(lme_model)) 
+
+``` 
+
+\newpage 
+Hey! Let's ANOVA 2: With Interaction Effects 
+----- 
+
+Our ANOVA Model: 
+$$ 
+ \Delta ln(\bar{PP}) = 1 + Stress Factor + Intermittent Factor + Stress Factor*Intermittent Factor 
+$$ 
+
+----- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+# CREATING THE ANOVA MODELS 
+anova_model <- aov(PP ~ 1 + StressFactor*IntermittentFactor, data = diff_df, na.action = na.omit) #, random = ~1|Subject) 
+
+# SUMMARIZING LINEAR MODELS 
+print(summary(anova_model)) 
+
+TukeyHSD(anova_model) 
 
 ``` 
