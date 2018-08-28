@@ -37,7 +37,9 @@ marker_new_file_pattern <- '.*_sessionmarkers_new.csv'
 summary_file_pattern <- '.*_Summary.csv'
 e4_file_pattern <- 'HR.csv|EDA.csv'
 
-discarded_subj_list <- list('T067')
+discarded_subj_list <- list('T067', 'T023')
+new_subj_list <- list('T003')
+
 
 data_error <- ''
 
@@ -422,14 +424,14 @@ splitSessions <- function(session_dir, subj_name) {
 splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
-  sapply(grp_list, function(grp_name) {
-  # sapply(grp_list[1], function(grp_name) {
+  # sapply(grp_list, function(grp_name) {
+  sapply(grp_list[1], function(grp_name) {
     
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
-    sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[3], function(subj_name) {
+    # sapply(subj_list, function(subj_name) {
+    sapply(subj_list[23], function(subj_name) {
       
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -441,11 +443,8 @@ splitSessionsForPP <- function() {
         session_dir <- file.path(getwd(), subj_dir, session_name)
         
         tryCatch({
-          if(!(subj_name %in% discarded_subj_list)) {
-            # print(subj_name)
+          if(!(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
             splitSessions(session_dir, subj_name)
-            
-            # print(getMatchedFileNames(session_dir, pp_file_pattern)[[1]][1]) 
             
             write(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'), file=log.file, append=TRUE)
             message(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'))
@@ -453,6 +452,15 @@ splitSessionsForPP <- function() {
           } else {
             write(paste0(grp_name, '-', subj_name, '-', session_name, ': NOT PROCESSED'), file=log.file, append=TRUE)
             message(paste0(grp_name, '-', subj_name, '-', session_name, ': NOT PROCESSED'))
+            
+            if(subj_name %in% discarded_subj_list) {
+              write('Reason: Subject is discarded subject list!', file=log.file, append=TRUE)
+              message('Reason: Subject is discarded subject list!')
+            } else if (subj_name %in% new_subj_list) {
+              write('Reason: Subject is entered after 08-26-18', file=log.file, append=TRUE)
+              message('Reason: Subject is entered after 08-26-18')
+            }
+
           }
           
         },
