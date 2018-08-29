@@ -38,13 +38,16 @@ summary_file_pattern <- '.*_Summary.csv'
 e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067', 'T023')
-new_subj_list <- list('T003')
-
+new_subj_list <- list()
+# subject_list_first_phase <- list()
+subject_list_first_phase <- tibble()
 
 data_error <- ''
 
 discarded_df <- tibble()
 non_processed_df <- tibble()
+
+
 
 if (length(discarded_subj_list) > 0) { 
   for (discarded_subj in discarded_subj_list) { 
@@ -62,6 +65,8 @@ if (length(discarded_subj_list) > 0) {
     } 
   } 
 } 
+
+
 
 #-------------------------#
 #---FUNCTION DEFINITION---#
@@ -213,7 +218,6 @@ convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, times
 }
 
 splitSessions <- function(session_dir, subj_name) {
-  
   merged_df <- data.frame()
   file_name <- getMatchedFileNames(session_dir, common_file_pattern)[[1]][1]
   
@@ -285,7 +289,6 @@ splitSessions <- function(session_dir, subj_name) {
       convert_to_csv(downsampled_pp_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_pp_nr.csv')))
       
     } else {
-      print(file.path(session_dir, nr_pp_file_name))
       downsampled_pp_df <- read.csv(file.path(session_dir, nr_pp_file_name))
       downsampled_pp_df$CovertedTime <- as.POSIXct(downsampled_pp_df$CovertedTime)
     }
@@ -418,32 +421,59 @@ splitSessions <- function(session_dir, subj_name) {
     # })
   }
   
+  
+  if (nlevels(marker_time_df$Session) < 5) {
+    write(paste0(subj_name, ' has less than 5 sessions!!'), file=log.file, append=TRUE)
+    message(paste0(subj_name, ' has less than 5 sessions!!'))
+  }
+  
   convert_to_csv(merged_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_merged.csv')))
 }
 
 splitSessionsForPP <- function() {
   grp_list <- getAllDirectoryList(data_dir)
   
-  # sapply(grp_list, function(grp_name) {
-  sapply(grp_list[1], function(grp_name) {
-    
+  # subj_list_first_phase <- list(read.csv(file.path(data_dir, 'subject_list_first_phase.csv'))[, 1])
+  # print(subj_list_first_phase)
+  # print(class(subj_list_first_phase))
+  
+  sapply(grp_list, function(grp_name) {
+  # sapply(grp_list[3], function(grp_name) {
+
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
-    # sapply(subj_list, function(subj_name) {
-    sapply(subj_list[23], function(subj_name) {
-      
+    sapply(subj_list, function(subj_name) {
+    # sapply(subj_list[47], function(subj_name) {
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
       session_list <- session_list[isMatchedString(super_session_pattern, session_list)]
       
       sapply(session_list, function(session_name) {
       # sapply(session_list[3], function(session_name) {
-        
         session_dir <- file.path(getwd(), subj_dir, session_name)
         
+        ########################################v##########################
+        #This is for making the list of the subjects to take into account##
+        ###################################################################
+        # if (isEmptyDataFrame(subject_list_first_phase)) {
+        #   subject_list_first_phase <<- tibble('Subject'=subj_name)
+        # } else {
+        #   subject_list_first_phase <<- rbind(subject_list_first_phase, tibble('Subject'=subj_name))
+        # }
+        
+        # print(subj_name %in% subj_list_first_phase)
+        
+        good_subj_list <- list('T011', 'T019', 'T021', 'T031', 'T032', 'T037', 'T046', 'T047',
+                               'T061', 'T063', 'T064', 'T065', 'T066', 'T077', 'T078', 'T079',
+                               'T083', 'T091', 'T092', 'T093', 'T096', 'T097', 'T098', 'T106',
+                               'T108', 'T112', 'T121', 'T122', 'T124',  'T126', 'T128', 'T130',
+                               'T138', 'T139', 'T141', 'T144', 'T145', 'T151', 'T152', 'T153',
+                               'T156', 'T157', 'T166', 'T172', 'T175', 'T176', 'T178')
+        
         tryCatch({
-          if(!(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
+          # if((subj_name %in% subj_list_first_phase) & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
+          if(subj_name %in% good_subj_list & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
             splitSessions(session_dir, subj_name)
             
             write(paste0(grp_name, '-', subj_name, '-', session_name, ': SUCCESSFUL'), file=log.file, append=TRUE)
@@ -486,11 +516,16 @@ splitSessionsForPP <- function() {
     })
   })
   
-  #convert_to_csv(discarded_df, "/nsf-stress-study-scripts/@Datasets/discarded_HR.csv") 
-  #convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv") 
-  convert_to_csv(discarded_df, "./nsf-stress-study-files/@Datasets/discarded_HR.csv") 
-  convert_to_csv(non_processed_df, "./nsf-stress-study-files/@Datasets/non_processed_df.csv") 
+  # CHANGE THIS 
   
+  #------------------- NATHAN
+  # convert_to_csv(discarded_df, "./@Datasets/discarded_HR.csv") 
+  # convert_to_csv(non_processed_df, "./@Datasets/non_processed_df.csv") 
+  
+  #------------------- SHAILA
+  convert_to_csv(discarded_df, "./nsf-stress-study-scripts/@Datasets/discarded_HR.csv")
+  convert_to_csv(non_processed_df, "./nsf-stress-study-scripts/@Datasets/non_processed_df.csv")
+  convert_to_csv(subject_list_first_phase, "./nsf-stress-study-scripts/@Datasets/subject_list_first_phase.csv")
 }
 
 
@@ -498,19 +533,20 @@ splitSessionsForPP <- function() {
 #-------Main Program------#
 #-------------------------#
 # CHANGE THIS 
+#------------------- SHAILA
+current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd(current_dir)
+source('nsf-stress-study-scripts/@Scripts-Not-to-Run/@RemoveNoise.R')
+source('nsf-stress-study-scripts/@Scripts-Not-to-Run/@DownSampleTimeStamp.R')
+log_dir <- file.path(current_dir, 'log-files')
 
-#source('@Scripts-Not-to-Run/@RemoveNoise.R') 
-#source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
+#------------------- NATHAN
+# setwd("~/Desktop/") 
+# source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@RemoveNoise.R') 
+# source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStamp.R')
+# log_dir <- file.path('~/Desktop/log-files')
 
-setwd("~/Desktop/") 
-source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@RemoveNoise.R') 
-source('~/Desktop/nsf-stress-study-files/@Scripts-Not-to-Run/@DownSampleTimeStamp.R')
 
-#source('@Scripts-Not-to-Run/@RemoveNoise.R') 
-#source('@Scripts-Not-to-Run/@DownSampleTimeStamp.R') 
-
-log_dir <- file.path('~/Desktop/log-files')
-# log_dir <- file.path(current_dir, 'log-files')
 log.file <- file.path(log_dir, paste0('session-split-log-', format(Sys.Date(), format='%m-%d-%y'), '.txt'))
 file.create(log.file)
 

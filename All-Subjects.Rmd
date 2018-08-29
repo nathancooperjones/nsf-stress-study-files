@@ -34,8 +34,8 @@ extrafont::loadfonts(quiet=TRUE)
 
 # CHANGE THIS 
 # Adjust the path to the `nsf-stress-study` directory or else no data and it is sad 
-data_dir <- "~/Desktop/nsf-stress-study" 
-# data_dir <- "T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study" 
+# data_dir <- "~/Desktop/nsf-stress-study" 
+data_dir <- "T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study"
 super_session_pattern <- "^SuperSession$" 
 
 # CHANGE THIS 
@@ -281,75 +281,75 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       # Subject out of frame 
       
       
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T016")
-      }
-      if (col_name == "PP" & condition == "IH") {
-        bad_subjects <- c(bad_subjects, "T067")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T080")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T083")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T084")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T092")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T098")
-      }
-      if (col_name == "PP" & condition == "BL") {
-        bad_subjects <- c(bad_subjects, "T107")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T092")
-      }
-      if (col_name == "PP" & condition == "BL") {
-        bad_subjects <- c(bad_subjects, "T092")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T092")
-      }
-      if (col_name == "PP" & condition == "BL") {
-        bad_subjects <- c(bad_subjects, "T110")
-      }
-      if (col_name == "PP" & condition == "IH") {
-        bad_subjects <- c(bad_subjects, "T124")
-      }
-      if (col_name == "PP" & condition == "IH") {
-        bad_subjects <- c(bad_subjects, "T127")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T139")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T140")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T146")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T155")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T158")
-      }
-      if (col_name == "PP" & condition == "IL") {
-        bad_subjects <- c(bad_subjects, "T162")
-      }
-      if (col_name == "PP" & condition == "BH") {
-        bad_subjects <- c(bad_subjects, "T167")
-      }
-      if (col_name == "PP" & condition == "BL") {
-        bad_subjects <- c(bad_subjects, "T172")
-      }
-      if (col_name == "PP" & condition == "BL") {
-        bad_subjects <- c(bad_subjects, "T180")
-      }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T016")
+      # }
+      # if (col_name == "PP" & condition == "IH") {
+      #   bad_subjects <- c(bad_subjects, "T067")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T080")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T083")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T084")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T092")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T098")
+      # }
+      # if (col_name == "PP" & condition == "BL") {
+      #   bad_subjects <- c(bad_subjects, "T107")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T092")
+      # }
+      # if (col_name == "PP" & condition == "BL") {
+      #   bad_subjects <- c(bad_subjects, "T092")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T092")
+      # }
+      # if (col_name == "PP" & condition == "BL") {
+      #   bad_subjects <- c(bad_subjects, "T110")
+      # }
+      # if (col_name == "PP" & condition == "IH") {
+      #   bad_subjects <- c(bad_subjects, "T124")
+      # }
+      # if (col_name == "PP" & condition == "IH") {
+      #   bad_subjects <- c(bad_subjects, "T127")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T139")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T140")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T146")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T155")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T158")
+      # }
+      # if (col_name == "PP" & condition == "IL") {
+      #   bad_subjects <- c(bad_subjects, "T162")
+      # }
+      # if (col_name == "PP" & condition == "BH") {
+      #   bad_subjects <- c(bad_subjects, "T167")
+      # }
+      # if (col_name == "PP" & condition == "BL") {
+      #   bad_subjects <- c(bad_subjects, "T172")
+      # }
+      # if (col_name == "PP" & condition == "BL") {
+      #   bad_subjects <- c(bad_subjects, "T180")
+      # }
       
 
 
