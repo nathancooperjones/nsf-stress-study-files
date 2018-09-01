@@ -333,16 +333,8 @@ essay_score_df <- essay_score_df %>%
   mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
   mutate(Session = factor(Session, levels = c("WB", "DT"))) 
 
-nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
-nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
-
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
-# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
-# full_nlp_df <- full_nlp_df %>% 
-#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
-#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 
@@ -908,16 +900,8 @@ essay_score_df <- essay_score_df %>%
   mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
   mutate(Session = factor(Session, levels = c("WB", "DT"))) 
 
-nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
-nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
-
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, result_df, by = "Subject") 
-# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
-# full_nlp_df <- full_nlp_df %>% 
-#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
-#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) 
@@ -1219,10 +1203,6 @@ essay_score_df <- essay_score_df %>%
   mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
   mutate(Session = factor(Session, levels = c("WB", "DT"))) 
 
-# nlp_df <- read_csv("~/Desktop/nsf-stress-study-files/essay_nlp_results.csv", col_types = cols()) 
-# nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
-# colnames(nlp_df)[which(names(nlp_df) == "Essay")] <- "Session" 
-
 diff_df <- testing_df[ , c(1:3, 9:18)] 
 names <- names(diff_df)[!(names(diff_df) %in% c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", "P.RB", "P.WB", "P.SC", "P.DT"))] 
 diff_df <- diff_df %>% 
@@ -1234,10 +1214,6 @@ levels(diff_df$Session) <- c("WB", "B", "SC.WB", "DT", "DT.WB", "DT.SC", "P", "P
 
 # MERGING CSV FILES 
 full_df <- merge(essay_score_df, diff_df, by = c("Subject", "Session")) 
-# full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
-# full_nlp_df <- full_nlp_df %>% 
-#   mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
-#   mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
 
 full_df <- full_df %>% 
   mutate(Group = factor(Group, levels = c("BN", "IN", "BF", "IF"))) %>% 
@@ -1257,9 +1233,6 @@ eight_star_fit <- lme(PP ~ 1 + ETSScore + Group + Activity, data = full_df, rand
 # SUMMARIZING LINEAR MODELS 
 print(summary(eight_star_fit)) 
 
-# levels(full_nlp_df$Group) <- c("Intermittent", "Intermittent", "Batch", "Batch") 
-# levels(full_nlp_df$Group) <- c("Batch", "Intermittent") 
-# 
 # # CREATING LINEAR MODELS 
 # eight_star_fit <- lme(PP ~ 1 + ETSScore + Group + Activity, data = full_df, random = ~1|Subject, na.action = na.omit) 
 # 
