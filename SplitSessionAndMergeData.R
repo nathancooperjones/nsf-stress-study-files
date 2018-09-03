@@ -38,7 +38,7 @@ summary_file_pattern <- '.*_Summary.csv'
 e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067', 'T023')
-new_subj_list <- list()
+new_subj_list <- list('174')
 # subject_list_first_phase <- list()
 subject_list_first_phase <- tibble()
 
@@ -120,6 +120,13 @@ getKnownError <- function(subj_name) {
     return('No data at Session Marker File')
   }
   return('')
+}
+
+checkTotalSessions <- function(df, subj_name) {
+  if (nlevels(droplevels(df)$Session) < 5) {
+    write(paste0(subj_name, ' has less than 5 sessions!!'), file=log.file, append=TRUE)
+    message(paste0(subj_name, ' has less than 5 sessions!!'))
+  }
 }
 
 copyReExtractedDataToNsfDir <- function() {
@@ -421,12 +428,7 @@ splitSessions <- function(session_dir, subj_name) {
     # })
   }
   
-  
-  if (nlevels(marker_time_df$Session) < 5) {
-    write(paste0(subj_name, ' has less than 5 sessions!!'), file=log.file, append=TRUE)
-    message(paste0(subj_name, ' has less than 5 sessions!!'))
-  }
-  
+  checkTotalSessions(merged_df, subj_name)
   convert_to_csv(merged_df, file.path(session_dir, paste0(substr(file_name, 1, nchar(file_name)-7), '_merged.csv')))
 }
 
@@ -444,7 +446,7 @@ splitSessionsForPP <- function() {
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[47], function(subj_name) {
+    # sapply(subj_list[58], function(subj_name) {
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
       session_list <- session_list[isMatchedString(super_session_pattern, session_list)]
@@ -464,6 +466,9 @@ splitSessionsForPP <- function() {
         
         # print(subj_name %in% subj_list_first_phase)
         
+        
+        # Download Amaneers csv file Subject_Status - Sheet 2. Read 180/181 rows. 
+        # Get the subjects with 1 value at column Good
         good_subj_list <- list('T011', 'T019', 'T021', 'T031', 'T032', 'T037', 'T046', 'T047',
                                'T061', 'T063', 'T064', 'T065', 'T066', 'T077', 'T078', 'T079',
                                'T083', 'T091', 'T092', 'T093', 'T096', 'T097', 'T098', 'T106',
