@@ -1,4 +1,4 @@
-Subject,Criterion Score,Number of Grammar Errors,Number of Usage Errors,Number of Mechanic Errors,Number of Style Errors,Trait Level for Word Choice,Trait Level for Conventions,Trait Level for Fluency/Organization
+﻿Subject,Criterion Score,Number of Grammar Errors,Number of Usage Errors,Number of Mechanic Errors,Number of Style Errors,Trait Level for Word Choice,Trait Level for Conventions,Trait Level for Fluency/Organization
 T003_IH_DT,(4/6),0,2,5,10,Proficient,Proficient,Proficient
 T003_IH_WB,Advisory (1/6),1,0,2,12,Proficient,Proficient,Developing
 T005_IH_DT,Advisory (3/6),1,3,4,5,Proficient,Proficient,Proficient
@@ -11,12 +11,18 @@ T011_IH_DT,Advisory (1/6),2,0,7,4,Proficient,Proficient,Developing
 T011_IH_WB,Advisory (2/6),0,1,2,4,Proficient,Proficient,Proficient
 T016_IH_DT,Advisory (4/6),1,1,12,10,Proficient,Proficient,Proficient
 T016_IH_WB,Advisory (1/6),1,2,1,0,Proficient,Proficient,Proficient
+T019_BH_DT,Advisory (2/6),3,2,9,19,Developing,Proficient,Proficient
+T019_BH_WB,Advisory (1/6),1,0,1,17,Proficient,Proficient,Developing
+T021_BH_DT,Advisory (3/6),0,2,29,7,Proficient,Proficient,Proficient
+T021_BH_WB,Advisory (1/6),0,1,6,7,Proficient,Proficient,Developing
 T031_IL_DT,Advisory (4/6),1,0,2,0,Proficient,Proficient,Proficient
 T031_IL_WB,Advisory (2/6),0,0,0,13,Advanced,Proficient,Proficient
 T032_IL_DT,Advisory (3/6),0,2,9,13,Proficient,Proficient,Proficient
 T032_IL_WB,Advisory (1/6),0,1,4,19,Proficient,Proficient,Developing
 T035_IL_DT,Advisory (3/6),0,0,9,26,Proficient,Proficient,Developing
 T035_IL_WB,Advisory (1/6),0,0,6,0,Proficient,Proficient,Proficient
+T037_IL_DT,Advisory (4/6),0,5,2,43,Proficient,Proficient,Proficient
+T037_IL_WB,Advisory (1/6),0,0,1,6,Proficient,Proficient,Developing
 T046_BL_DT,Advisory (2/6),4,6,12,7,Developing,Proficient,Proficient
 T046_BL_WB,Advisory (1/6),0,0,6,0,Proficient,Proficient,Proficient
 T047_Bl_DT,Advisory (3/6),1,2,15,14,Proficient,Proficient,Proficient
@@ -87,6 +93,8 @@ T127_IH_DT,Advisory (4/6),2,4,18,1,Proficient,Proficient,Proficient
 T127_IH_WB,Advisory (2/6),0,1,7,26,Proficient,Proficient,Developing
 T128_IH_DT,Advisory (3/6),0,0,8,0,Proficient,Proficient,Proficient
 T128_IH_WB,Advisory (2/6),0,0,0,23,Advanced,Proficient,Developing
+T130_IH_DT,Advisory (5/6),2,1,17,6,Proficient,Proficient,Proficient
+T130_IH_WB,Advisory (3/6),2,0,2,1,Proficient,Proficient,Proficient
 T136_BH_DT,Advisory (5/6),0,1,11,0,Proficient,Proficient,Advanced
 T136_BH_WB,Advisory (2/6),1,1,1,0,Proficient,Proficient,Proficient
 T138_BH_DT,Advisory (4/6),0,1,2,16,Proficient,Proficient,Proficient
@@ -99,6 +107,8 @@ T141_BH_DT,Advisory (3/6),0,1,7,0,Proficient,Advanced,Proficient
 T141_BH_WB,Advisory (3/6),0,0,3,13,Proficient,Proficient,Proficient
 T144_BH_DT,Advisory (3/6),0,1,9,11,Proficient,Proficient,Proficient
 T144_BH_WB,Advisory (3/6),0,0,3,19,Proficient,Proficient,Proficient
+T145_BH_DT,Advisory (5/6),0,1,12,0,Proficient,Proficient,Advanced
+T145_BH_WB,Advisory (2/6),0,0,0,7,Proficient,Proficient,Developing
 T151_IL_DT,Advisory (4/6),3,0,8,31,Proficient,Proficient,Proficient
 T151_IL_WB,Advisory (2/6),0,2,3,4,Proficient,Proficient,Proficient
 T152_IL_DT,Advisory (5/6),3,2,12,12,Proficient,Proficient,Proficient

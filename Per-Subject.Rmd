@@ -7,7 +7,7 @@ geometry: "top=3.5cm, bottom=3cm"
 ```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis"} 
 ## READ ME FIRST!! 
 ## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
-## I have done my best to comment all important blocks of code to ensure you know what they do. 
+## I have done my best to comment all important blocks of code to ensure you know what they do. Rep
 ## Enjoy the script and my attempt at humorous comments! 
 
 # CHANGE THIS 
