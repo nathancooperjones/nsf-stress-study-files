@@ -194,8 +194,13 @@ convertTimestamp <- function(df, intermittent_df, timestamp='Timestamp') {
 convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, timestamp=c('startTimestamp', 'EndTimestamp')) { 
   
   df[[timestamp[1]]] <- as.POSIXct(strptime(df[[timestamp[1]]], format=s_interface_date_format)) 
-  df[[timestamp[2]]] <- as.POSIXct(strptime(df[[timestamp[2]]], format=s_interface_date_format)) 
-  intermittent_time <- hms(intermittent_df$Baseline.Stress.Timestamp) 
+  df[[timestamp[2]]] <- as.POSIXct(strptime(df[[timestamp[2]]], format=s_interface_date_format))
+  
+  if (is(intermittent_df$Baseline.Stress.Timestamp, "character")) {
+    intermittent_time <- hms(intermittent_df$Baseline.Stress.Timestamp) 
+  } else {
+    intermittent_time <- strftime(intermittent_df$Baseline.Stress.Timestamp) 
+  }
   
   min_time <- head(df[[timestamp[1]]], 1) 
   max_time <- tail(df[[timestamp[2]]], 1) 
@@ -440,13 +445,14 @@ splitSessionsForPP <- function() {
   # print(class(subj_list_first_phase))
   
   sapply(grp_list, function(grp_name) {
-  # sapply(grp_list[3], function(grp_name) {
+  # sapply(grp_list[1], function(grp_name) {
 
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[58], function(subj_name) {
+    # sapply(subj_list[37], function(subj_name) {
+      # good_subj_list <- list('T037')
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
       session_list <- session_list[isMatchedString(super_session_pattern, session_list)]
@@ -464,17 +470,20 @@ splitSessionsForPP <- function() {
         #   subject_list_first_phase <<- rbind(subject_list_first_phase, tibble('Subject'=subj_name))
         # }
         
-        # print(subj_name %in% subj_list_first_phase)
         
-        
-        # Download Amaneers csv file Subject_Status - Sheet 2. Read 180/181 rows. 
+        ####################################################################################
+        # Download Amaneers csv file Subject_Status - Sheet 3. Read 180/181 rows. 
         # Get the subjects with 1 value at column Good
-        good_subj_list <- list('T011', 'T019', 'T021', 'T031', 'T032', 'T037', 'T046', 'T047',
-                               'T061', 'T063', 'T064', 'T065', 'T066', 'T077', 'T078', 'T079',
-                               'T083', 'T091', 'T092', 'T093', 'T096', 'T097', 'T098', 'T106',
-                               'T108', 'T112', 'T121', 'T122', 'T124',  'T126', 'T128', 'T130',
-                               'T138', 'T139', 'T141', 'T144', 'T145', 'T151', 'T152', 'T153',
-                               'T156', 'T157', 'T166', 'T172', 'T175', 'T176', 'T178')
+        # subj_status_index_file.csv
+        ####################################################################################
+        good_subj_list <- list('T003', 'T005', 'T009', 'T011', 'T016', 'T019', 'T021', 'T031',
+                               'T032', 'T035', 'T037', 'T046', 'T047', 'T051', 'T061', 'T063',
+                               'T064', 'T065', 'T066', 'T077', 'T078', 'T079', 'T082', 'T083',
+                               'T084', 'T091', 'T092', 'T093', 'T094', 'T096', 'T097', 'T098',
+                               'T106', 'T108', 'T112', 'T121', 'T122', 'T124', 'T126', 'T128',
+                               'T130', 'T136', 'T138', 'T139', 'T141', 'T144', 'T145', 'T151',
+                               'T152', 'T153', 'T154', 'T156', 'T157', 'T162', 'T166', 'T172',
+                               'T173', 'T175', 'T176', 'T178')
         
         tryCatch({
           # if((subj_name %in% subj_list_first_phase) & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
