@@ -34,7 +34,8 @@ library(kableExtra)
 # You should already know what to do. 
 # Note: Try to run this with the most-recent version of the NASA data, downloaded off of somewhere on the internet. 
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
-nasa_df <- read_csv("~/Desktop/nsf-stress-study-files/@Datasets/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
+nasa_df <- read_csv("@Datasets/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
+subjects_included <- NULL 
 # nasa_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
 
 # Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
@@ -58,6 +59,8 @@ plot_nasa_results <- function() {
   
   # Merge the the two dataframes we have processed together into one, gloriously informative one. 
   new_df <- merge(nasa_df, result_df, by = "Subject") 
+  
+  subjects_included <<- new_df$Subject 
   
   # Create a column list for each response we wish to generate a bar plot for. 
   # This essentially means just get rid of "Subject" from `col_names` above since we obviously would not make a bar plot with that, duh! 
@@ -148,4 +151,15 @@ interpret_results <- function(name, p_value) {
 ```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis", fig.height = 6} 
 # Well now, this is the easiest function call EVER! Sit back and relax - we did it! 
 plot_nasa_results() 
+``` 
+
+\newpage 
+### Subjects Not Included: 
+```{r echo=FALSE, warning = FALSE, message = FALSE} 
+subjects_not_included <- !(result_df$Subject %in% subjects_included) 
+if (length(result_df[subjects_not_included, "Subject"]) == 0) { 
+  cat("None - they are all included! ") 
+} else { 
+  cat(result_df[subjects_not_included, "Subject"]$Subject) 
+} 
 ``` 

@@ -14,7 +14,6 @@ header-includes:
 
 # install.packages('wesanderson')
 library(tidyverse) 
-library(knitr) 
 library(grid) 
 library(gridExtra) 
 library(kableExtra) 

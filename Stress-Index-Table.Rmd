@@ -24,8 +24,7 @@ library(kableExtra)
 
 # CHANGE THIS 
 # Edit the path to the wonderful file you made in `AllSignals.Rmd`. You can do it! 
-full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
-full_df <- full_df[ , !(names(full_df) %in% c("N.EDA", "N.HR"))] 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols())
 result_df <- tibble() 
 
 # I already covered this in `AllSignals.Rmd`. In the future, if I don't comment it, then assume it is either really simple or 
@@ -108,7 +107,7 @@ process_subject <- function(df, subj_name, condition) {
 add_another_row <- function(session_dir, subj_name, subj_interface_file_name, condition, temp_df) { 
   
   # Here is a sneak peak of the columns we will calculate results for. Shh, no telling! 
-  col_names <- c("PP", "HR", "BR", "D.EDA", "D.HR") 
+  col_names <- c("PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR") 
   # This `vec` variable will hold the row of each of the column results for this subject. It's a very important job! 
   # but it's also lonely... 
   # :( 
@@ -198,7 +197,7 @@ add_another_row <- function(session_dir, subj_name, subj_interface_file_name, co
 format_final_df <- function() { 
   
   # We change the column names of the final tibble. 
-  col_names_final <- c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR") 
+  col_names_final <- c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR") 
   names(result_df) <<- col_names_final 
   
   # We also adjust the order of the Group variable to something that makes sense, and then sort by it. 
@@ -212,7 +211,9 @@ format_final_df <- function() {
               sumHR = sum(grepl("✅", HR), na.rm = TRUE), 
               sumBR = sum(grepl("✅", BR), na.rm = TRUE), 
               sumD.EDA = sum(grepl("✅", D.EDA), na.rm = TRUE), 
-              sumD.HR = sum(grepl("✅", D.HR), na.rm = TRUE)) 
+              sumD.HR = sum(grepl("✅", D.HR), na.rm = TRUE), 
+              sumN.EDA = sum(grepl("✅", N.EDA), na.rm = TRUE), 
+              sumN.HR = sum(grepl("✅", N.HR), na.rm = TRUE))  
   
   # This just counts the total number of non-NA valus in each column. 
   counts <- apply(result_df, 2, function(x) length(which(!is.na(x)))) 
@@ -237,8 +238,8 @@ format_final_df <- function() {
   TOTALS$Group = "...." 
   
   # We make sure we have the same column names and same order so we can `rbind()` it correctly (A.K.A. without errors)! 
-  colnames(TOTALS) <- c("PP", "HR", "BR", "D.EDA", "D.HR", "University", "Subject", "Group") 
-  TOTALS <- TOTALS[c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR")] 
+  colnames(TOTALS) <- c("PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR", "University", "Subject", "Group") 
+  TOTALS <- TOTALS[c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR")] 
   result_df <<- rbind(result_df, TOTALS) 
   
 } 
