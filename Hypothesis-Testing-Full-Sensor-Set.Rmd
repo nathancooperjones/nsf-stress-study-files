@@ -42,11 +42,9 @@ library(kableExtra)
 # CHANGE THIS 
 # Go ahead, I will wait. 
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
-full_df <- full_df[ , !(names(full_df) %in% c("N.EDA", "N.HR"))] 
 full_df$HR <- as.numeric(full_df$HR) 
-# stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols())
-stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols())
-
+stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols())
+# stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols()) 
 
 # Setting up three (that's right, three!) whole global tibbles. Wow! 
 result_df <- tibble() 
@@ -125,7 +123,7 @@ process_subject <- function(df, subj_name, condition) {
 mess_with_the_columns <- function() { 
   
   # We now get rid of columns we don't need any more and adjust the order of our final dataframe, result_df. 
-  col_names_final <- c("Subject", "Condition", "Session", "PP", "HR", "BR", "D.EDA", "D.HR") 
+  col_names_final <- c("Subject", "Condition", "Session", "PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
   result_df <<- result_df[ , (colnames(result_df) %in% col_names_final)] 
   result_df <<- result_df[col_names_final] 
   
@@ -190,7 +188,7 @@ plot1 <- function(condition) {
   # We now plot the graphs for the following session differences below. 
   comparison_levels <- c("WB.RB", "SC.RB", "SC.WB") 
   for (comp in comparison_levels) { 
-    col_vec <- c("PP", "HR", "BR", "D.EDA", "D.HR") 
+    col_vec <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
     # `sign_vec` below will eventually hold all the fun astericks that took me weeks to figure out how to incorporate. 
     sign_vec <- NULL 
     
@@ -264,9 +262,10 @@ plot1 <- function(condition) {
               ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("D.EDA")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
-              annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4])) 
+              annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
+              annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
     
     # ... and here... 
     g3 <- ggplotGrob(labelling_df %>% 
@@ -343,7 +342,7 @@ plot1_dt <- function(condition) {
   i <- 1 
   for (comp in comparison_levels) { 
     
-    col_vec <- c("PP", "HR", "BR", "D.EDA", "D.HR") 
+    col_vec <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
     sign_vec <- NULL 
     for (col in col_vec) { 
       do_we_have_anything <- t_test_df %>% 
@@ -399,9 +398,10 @@ plot1_dt <- function(condition) {
               ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("D.EDA")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
-              annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4])) 
+              annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
+              annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
     
     g3 <- ggplotGrob(labelling_df %>% 
             ungroup(Measurement) %>%
@@ -475,7 +475,7 @@ plot1_p <- function(condition) {
   i <- 1 
   for (comp in comparison_levels) { 
     
-    col_vec <- c("PP", "HR", "BR", "D.EDA", "D.HR") 
+    col_vec <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
     sign_vec <- NULL 
     for (col in col_vec) { 
       do_we_have_anything <- t_test_df %>% 
@@ -531,7 +531,7 @@ plot1_p <- function(condition) {
               ylab(expression(Delta~"ln"~bar("( . )"))) + 
               theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
               stat_summary(fun.data = give.n, geom = "text") + 
-              scale_x_discrete(labels=c("D.EDA")) + 
+              scale_x_discrete(labels=c("D.EDA", "N.EDA")) + 
               scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
               annotate("text", x=1, y=Inf, label= sign_vec[4], vjust = 1.2, size = size_vec[4]) + 
               annotate("text", x=2, y=Inf, label= sign_vec[5], vjust = 1.2, size = size_vec[5])) 
@@ -1088,7 +1088,7 @@ mess_with_the_columns()
 ## Sensor Channels per Activity ## 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE} 
-measure_vec <- c("PP", "HR", "BR", "D.EDA", "D.HR") 
+measure_vec <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
 cond <- "IH" 
 
 ## THIS IS EXTREMELY IMPORTANT TO UNDERSTANDING THIS SCRIPT: 
