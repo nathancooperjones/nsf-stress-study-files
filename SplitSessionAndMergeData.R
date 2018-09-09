@@ -38,7 +38,7 @@ summary_file_pattern <- '.*_Summary.csv'
 e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067', 'T023')
-new_subj_list <- list('174')
+new_subj_list <- list()
 # subject_list_first_phase <- list()
 subject_list_first_phase <- tibble()
 
@@ -124,8 +124,8 @@ getKnownError <- function(subj_name) {
 
 checkTotalSessions <- function(df, subj_name) {
   if (nlevels(droplevels(df)$Session) < 5) {
-    write(paste0(subj_name, ' has less than 5 sessions!!'), file=log.file, append=TRUE)
-    message(paste0(subj_name, ' has less than 5 sessions!!'))
+    write(paste0('--- ', subj_name, ' has less than 5 sessions ---'), file=log.file, append=TRUE)
+    message(paste0('--- ', subj_name, ' has less than 5 sessions ---'))
   }
 }
 
@@ -445,13 +445,13 @@ splitSessionsForPP <- function() {
   # print(class(subj_list_first_phase))
   
   sapply(grp_list, function(grp_name) {
-  # sapply(grp_list[1], function(grp_name) {
+  # sapply(grp_list[3], function(grp_name) {
 
     grp_dir <- file.path(data_dir, grp_name)
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[37], function(subj_name) {
+    # sapply(subj_list[54], function(subj_name) {
       # good_subj_list <- list('T037')
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -483,8 +483,8 @@ splitSessionsForPP <- function() {
                                'T097', 'T098', 'T099', 'T106', 'T108', 'T112', 'T113', 'T114', 
                                'T121', 'T122', 'T124', 'T126', 'T128', 'T130', 'T132', 'T138', 
                                'T139', 'T141', 'T144', 'T145', 'T151', 'T152', 'T153', 'T154', 
-                               'T156', 'T157', 'T162', 'T166', 'T172', 'T173', 'T175', 'T176', 
-                               'T178')
+                               'T156', 'T157', 'T162', 'T166', 'T172', 'T173', 'T174', 'T175', 
+                               'T176', 'T178')
         
         tryCatch({
           # if((subj_name %in% subj_list_first_phase) & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
