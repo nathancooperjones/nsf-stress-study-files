@@ -455,7 +455,7 @@ splitSessionsForPP <- function() {
     
     sapply(subj_list, function(subj_name) {
     # sapply(subj_list[35], function(subj_name) {
-      # good_subj_list <- list('T037')
+      # good_subj_list <- list('T097')
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
       session_list <- session_list[isMatchedString(super_session_pattern, session_list)]
@@ -481,13 +481,12 @@ splitSessionsForPP <- function() {
         ####################################################################################
         good_subj_list <- list('T003', 'T005', 'T009', 'T011', 'T016', 'T019', 'T021', 'T031',
                                'T032', 'T035', 'T037', 'T046', 'T047', 'T051', 'T061', 'T063',
-                               'T064', 'T065', 'T066', 'T068', 'T077', 'T078', 'T079', 'T082', 
+                               'T064', 'T065', 'T066', 'T068', 'T077', 'T078', 'T079', 'T082',
                                'T083', 'T084', 'T085', 'T091', 'T092', 'T093', 'T094', 'T096', 
-                               'T097', 'T098', 'T099', 'T106', 'T108', 'T112', 'T113', 'T114', 
-                               'T121', 'T122', 'T124', 'T126', 'T128', 'T130', 'T132', 'T138', 
-                               'T139', 'T141', 'T144', 'T145', 'T151', 'T152', 'T153', 'T154', 
-                               'T156', 'T157', 'T162', 'T166', 'T172', 'T173', 'T174', 'T175', 
-                               'T176', 'T178')
+                               'T098', 'T099', 'T106', 'T112', 'T113', 'T114', 'T121', 'T122', 
+                               'T124', 'T126', 'T128', 'T130', 'T132', 'T138', 'T139', 'T141', 
+                               'T144', 'T145', 'T151', 'T152', 'T154', 'T156', 'T157', 'T162', 
+                               'T166', 'T172', 'T173', 'T174', 'T175', 'T176', 'T178')
         
         tryCatch({
           # if((subj_name %in% subj_list_first_phase) & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
