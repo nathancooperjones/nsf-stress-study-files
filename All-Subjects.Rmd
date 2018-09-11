@@ -280,6 +280,9 @@ do_the_actual_plotting_now <- function(df, col_name, condition) {
       # Why not! 
       # Subject out of frame 
       
+      if (col_name == "PP" & condition == "BL" & sess == "StressCondition") {
+        bad_subjects <- c(bad_subjects, "T113")
+      }
       
       # if (col_name == "PP" & condition == "BH") {
       #   bad_subjects <- c(bad_subjects, "T016")

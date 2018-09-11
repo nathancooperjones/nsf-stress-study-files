@@ -44,8 +44,10 @@ library(kableExtra)
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 full_df <- full_df[ , !(names(full_df) %in% c("N.EDA", "N.HR"))] 
 full_df$HR <- as.numeric(full_df$HR) 
-stroop_df <- read_csv("~/Desktop/nsf-stress-study-files/@Datasets/survey-reports/color_test_score.csv", col_types = cols())
-# stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols()) 
+
+# stroop_df <- read_csv("~/Desktop/nsf-stress-study/color_test_score.csv", col_types = cols())
+stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols())
+
 
 # Setting up three (that's right, three!) whole global tibbles. Wow! 
 result_df <- tibble() 
@@ -1255,7 +1257,7 @@ diff_vec <- c("WB.RB", "SC.RB", "DT.RB", "P.RB")
 # And we only do the ANOVA for the following measurements since all the other ones are poor and messy - gross! 
 measure_vec <- c("PP", "HR", "BR") 
 # Here we specify the minimum score threshold to recieve on the Stroop test to be considered valid and that you actually tried. 
-score_threshold <- 30 
+score_threshold <- 0 
 
 # Okay, let's loop over everything and get this over with. 
 for (diff in diff_vec) { 

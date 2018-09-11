@@ -38,7 +38,7 @@ summary_file_pattern <- '.*_Summary.csv'
 e4_file_pattern <- 'HR.csv|EDA.csv'
 
 discarded_subj_list <- list('T067', 'T023')
-new_subj_list <- list('174')
+new_subj_list <- list()
 # subject_list_first_phase <- list()
 subject_list_first_phase <- tibble()
 
@@ -124,8 +124,8 @@ getKnownError <- function(subj_name) {
 
 checkTotalSessions <- function(df, subj_name) {
   if (nlevels(droplevels(df)$Session) < 5) {
-    write(paste0(subj_name, ' has less than 5 sessions!!'), file=log.file, append=TRUE)
-    message(paste0(subj_name, ' has less than 5 sessions!!'))
+    write(paste0('--- ', subj_name, ' has less than 5 sessions ---'), file=log.file, append=TRUE)
+    message(paste0('--- ', subj_name, ' has less than 5 sessions ---'))
   }
 }
 
@@ -169,10 +169,17 @@ getSignalWithSession <- function(marker_time_df, signal_df) {
   return(signal_with_session_df)
 }
 
+getHourMinSec <- function(date_to_convert) {
+  if (!is(date_to_convert, "character")) {
+    date_to_convert <- strftime(date_to_convert, format="%H:%M:%S")
+  }
+  return(hms(date_to_convert))
+}
+
 convertTimestamp <- function(df, intermittent_df, timestamp='Timestamp') { 
   
   df[[timestamp]] <- as.POSIXct(strptime(df[[timestamp]], format=s_interface_date_format)) 
-  intermittent_time <- hms(intermittent_df$Baseline.Stress.Timestamp) 
+  intermittent_time <- getHourMinSec(intermittent_df$Baseline.Stress.Timestamp)
   
   min_time <- head(df[[timestamp]], 1) 
   max_time <- tail(df[[timestamp]], 1) 
@@ -189,19 +196,15 @@ convertTimestamp <- function(df, intermittent_df, timestamp='Timestamp') {
   } 
   
   return(list(df, FALSE)) 
-} 
+}
 
 convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, timestamp=c('startTimestamp', 'EndTimestamp')) { 
   
   df[[timestamp[1]]] <- as.POSIXct(strptime(df[[timestamp[1]]], format=s_interface_date_format)) 
   df[[timestamp[2]]] <- as.POSIXct(strptime(df[[timestamp[2]]], format=s_interface_date_format))
   
-  if (is(intermittent_df$Baseline.Stress.Timestamp, "character")) {
-    intermittent_time <- hms(intermittent_df$Baseline.Stress.Timestamp) 
-  } else {
-    intermittent_time <- strftime(intermittent_df$Baseline.Stress.Timestamp) 
-  }
-  
+  intermittent_time <- getHourMinSec(intermittent_df$Baseline.Stress.Timestamp)
+
   min_time <- head(df[[timestamp[1]]], 1) 
   max_time <- tail(df[[timestamp[2]]], 1) 
   
@@ -224,7 +227,7 @@ convertTimestampSessionMarkers <- function(df, intermittent_df, subj_name, times
     message(paste0('Timestamps changed for ', subj_name, '. ')) 
     flush.console() 
     return(df) 
-  } 
+  }
   
   return(df) 
 }
@@ -451,7 +454,7 @@ splitSessionsForPP <- function() {
     subj_list <- getAllDirectoryList(grp_dir)
     
     sapply(subj_list, function(subj_name) {
-    # sapply(subj_list[37], function(subj_name) {
+    # sapply(subj_list[35], function(subj_name) {
       # good_subj_list <- list('T037')
       subj_dir <- file.path(grp_dir, subj_name)
       session_list <- getAllDirectoryList(subj_dir)
@@ -483,8 +486,8 @@ splitSessionsForPP <- function() {
                                'T097', 'T098', 'T099', 'T106', 'T108', 'T112', 'T113', 'T114', 
                                'T121', 'T122', 'T124', 'T126', 'T128', 'T130', 'T132', 'T138', 
                                'T139', 'T141', 'T144', 'T145', 'T151', 'T152', 'T153', 'T154', 
-                               'T156', 'T157', 'T162', 'T166', 'T172', 'T173', 'T175', 'T176', 
-                               'T178')
+                               'T156', 'T157', 'T162', 'T166', 'T172', 'T173', 'T174', 'T175', 
+                               'T176', 'T178')
         
         tryCatch({
           # if((subj_name %in% subj_list_first_phase) & !(subj_name %in% discarded_subj_list) & !(subj_name %in% new_subj_list)) {
