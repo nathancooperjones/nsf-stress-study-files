@@ -46,13 +46,8 @@ library(kableExtra)
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 full_df <- full_df[ , !(names(full_df) %in% c("D.EDA", "N.EDA", "D.HR", "N.HR"))] 
 full_df[full_df$Session == "Presentation", "BR"] <- NA 
-<<<<<<< HEAD
-stroop_df <- read_csv("@Datasets/survey-reports/color_test_score.csv", col_types = cols()) 
-# stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols())
-=======
-# stroop_df <- read_csv("@Datasets/survey-reports/color_test_score.csv", col_types = cols()) 
 stroop_df <- read_csv("@Datasets/color_test_score.csv", col_types = cols()) 
->>>>>>> 2f887ee291eb0c8ff8b2d03c66a22bf53a41f2a3
+# stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols())
 
 result_df <- tibble() 
 t_test_df <- tibble() 

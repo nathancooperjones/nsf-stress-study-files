@@ -1,0 +1,298 @@
+---
+title: "Sensor Channel per Subject - All Activities" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+---
+
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis"} 
+## READ ME FIRST!! 
+## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
+## I have done my best to comment all important blocks of code to ensure you know what they do. Rep
+## Enjoy the script and my attempt at humorous comments! 
+
+# CHANGE THIS 
+# Really nothing for you to change here, just wanted to let you know that if you didn't run `AllSignals.Rmd` first 
+# then this script WILL NOT WORK. Don't be foolish - just do it! 
+
+# Good libraries, as usual. 
+library(tidyverse) 
+library(grid) 
+library(gridExtra) 
+library(scales) 
+library(knitr) 
+
+# CHANGE THIS 
+# You should know the drill by now. 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+# full_df <- read_csv("full_df.csv", col_types = cols()) 
+
+# Don't make me say it. 
+isMatch <- function(pattern, str) { 
+  return(grepl(str, pattern)) 
+} 
+
+
+
+
+
+# Let's do it. 
+find_subject_sessions <- function(given_condition, n) { 
+  
+  for (subj_name in levels(factor(full_df$Subject))) { 
+    
+    df <- full_df %>% 
+      filter(Subject == subj_name) 
+    
+    tryCatch({ 
+      
+      condition <- df$Condition[1] 
+      
+      if (condition == given_condition) { 
+        df <- df[ , !(names(df) %in% c("Subject", "Condition", "Task"))] 
+        graph_for_subjects(df, subj_name, condition, n) 
+      } 
+    }, warning = function(w) { 
+      message(paste0("Warnings present for subject ", subj_name, ": ", w, " Continuing process anyway.")) 
+      flush.console() 
+      return() 
+    }, error = function(e) {  
+      message(paste0("Error present for subject ", subj_name, ": ", e, " ")) 
+      flush.console() 
+      return() 
+    }) 
+  } 
+} 
+
+
+
+
+
+# You'd think this function actually does the graphing for the subjects based on its name, 
+# but it doesn't. You just got pranked. 
+graph_for_subjects <- function(df, subj_name, condition, n) { 
+  
+  session_vec <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation") 
+  df$Session <- factor(df$Session, levels = session_vec) 
+  levels(df$Session) <- c("RestingBaseline", "SingleTask", "Break", "DualTask", "Presentation") 
+  
+  if (nrow(df) < 4) { 
+    message(paste0("Dataframe for subject ", subj_name, " is empty. ")) 
+    flush.console() 
+    return() 
+  } 
+
+  col_vector <- c("PP", "HR", "BR", "D.EDA", "N.EDA", "D.HR", "N.HR") 
+  # Okay so we want a graph for each measurement. So we do just that. 
+  for (col in col_vector) { 
+    if (col %in% names(df)) { 
+      success <- do_the_actual_plotting_now(df, subj_name, condition, col, n) 
+      # Everything below here that is just a bunch of new lines just makes sure that there is space between graphs 
+      # and two subjects don't end up on the same page, because that would be awful! 
+      # It should make sense once you see it. If something isn't looking right with the spacing of pages and graphs on them, 
+      # just add more spaces and newlines here. You can do it - I believe in you. 
+      if (success) { 
+        if (col == "PP") { 
+          plot.new() 
+          plot.new() 
+        } 
+      } else { 
+        if (col == "PP") { 
+          cat("\n  \nSubject ", subj_name, " does not have PP signals.  \n  \n  \n  \n  \n  \n  \n  \n  \n")  
+        } else if (col == "HR") { 
+          cat("\n  \nSubject ", subj_name, " does not have HR signals.  \n  \n  \n  \n  \n  \n  \n  \n  \n")  
+        } else if (col == "BR") { 
+          cat("Subject ", subj_name, " does not have BR signals.  \n  \n  \n") 
+          cat("\n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n") 
+        } 
+      } 
+    } 
+  } 
+} 
+
+
+
+
+
+# Okay, now this function actually does the plotting now, hence the name. 
+do_the_actual_plotting_now <- function(df, subj_name, condition, col_name, n) { 
+  
+  # We only need three columns per plot - amazing how simple this is, isn't it! 
+  df <- df[ , c("CovertedTime", "Session", col_name)] 
+  
+  # Of course, it can't ALL be NA... 
+  if (!all(is.na(df[[col_name]]))) { 
+  
+    label <- figure_out_labels(col_name) 
+    title <- figure_out_title(subj_name, condition, col_name) 
+    
+    # This figures out the sessions we need to consider based on the supplied number of sessions for us to consider. 
+    if (n == 3) { 
+      temp_df <- df %>% 
+        group_by(Session) %>% 
+        filter(Session %in% c('RestingBaseline', 'SingleTask', 'DualTask')) %>% 
+        mutate(TimeElapsed = as.integer(CovertedTime) - as.integer(head(CovertedTime, 1))) %>% 
+        na.omit() 
+    } else if (n == 5) { 
+      temp_df <- df %>% 
+        group_by(Session) %>% 
+        mutate(TimeElapsed = as.integer(CovertedTime) - as.integer(head(CovertedTime, 1))) %>% 
+        na.omit() 
+    } else { 
+      stop(paste0("n should either be 3 or 5. You provided ", n, ". Bad human. ")) 
+    } 
+    
+    # Okay, now we have to make this really difficult and make a custom color vector since some 
+    # subjects might not have data for all sessions, and if it is missing a session but has a color for it, 
+    # R throughs a hissy fit and freaks out on us. So we need to fix it. 
+    colors <- NULL 
+    if ("RestingBaseline" %in% temp_df$Session) { 
+      colors <- c(colors, "#000000") 
+    } 
+    if ("SingleTask" %in% temp_df$Session) { 
+      colors <- c(colors, "#0082C8") 
+    } 
+    if ("Break" %in% temp_df$Session) { 
+      colors <- c(colors, "#F58231") 
+    } 
+    if ("DualTask" %in% temp_df$Session) { 
+      colors <- c(colors, "#D02827") 
+    } 
+    if ("Presentation" %in% temp_df$Session) { 
+      colors <- c(colors, "#3CB44B") 
+    } 
+    
+    # Finally, we can plot it now. Everything here should be pretty self-explanatory... 
+    g1 <- temp_df %>% 
+      ggplot(aes_string(x = "TimeElapsed", y = col_name, color = "Session") ) + 
+        geom_line(alpha = 0.9) + 
+        ggtitle(paste0(title)) + 
+        theme(panel.background=element_rect(fill = "NA"), panel.grid.minor = element_line(colour = "#E0E0E0"), 
+              legend.position="bottom", legend.title=element_blank(), legend.text=element_text(size=10), 
+              axis.title.y = element_text(size=8)) + 
+        xlab("Time [s]") + 
+        ylab(label) + 
+        scale_colour_manual(values = colors) + 
+        # We want 10 ticks on the x-axis, and we want them pretty! 
+        scale_x_continuous(breaks = pretty_breaks(n = 10)) + 
+        # Make the color squares even bigger because we can! 
+        guides(colour = guide_legend(override.aes = list(size=6))) 
+    
+    # Now we calculate the mean values for this plot and then do just about the same thing in plotting in as before. 
+    temp_df <- temp_df %>% 
+      group_by(Session) %>% 
+      summarize(mean_pp = mean((!!as.name(col_name)), na.rm = TRUE)) 
+    
+    g2 <- temp_df %>% 
+      ggplot(aes(x = 1, y = mean_pp, color = Session), alpha = 0.6) + 
+        theme(panel.background=element_rect(fill = "NA"), panel.grid.minor = element_line(colour = "#E0E0E0"), 
+              legend.position="none", # NO LEGEND FOR BOTTOM GRAPH? 
+              axis.title.x=element_text(margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")), 
+              axis.title.y = element_text(size=8)) + 
+        xlab(" \n ") + 
+        ylab(label) + 
+        # Just plot the mean line, each as their own horizontal line in the plot. 
+        geom_hline(yintercept=temp_df$mean_pp, linetype="dashed", color = colors, size=1) 
+    
+    # This is tricky and the syntax got changed with the latest version of ggplot2, so if this isn't working for you, 
+    # check for a package update for ggplot2. Anyway, this code just ensures that the ranges of the two graphs are the same 
+    # so we can get some scale and perspwective. 
+    if (!is.null(ggplot_build(g1)$layout$panel_scales_y[[1]]$range$range[1])) { 
+      min_g1_g2 <- min(ggplot_build(g1)$layout$panel_scales_y[[1]]$range$range[1], ggplot_build(g2)$layout$panel_scales_y[[1]]$range$range[1]) 
+      max_g1_g2 <- max(ggplot_build(g1)$layout$panel_scales_y[[1]]$range$range[2], ggplot_build(g2)$layout$panel_scales_y[[1]]$range$range[2]) 
+      g1 <- g1 + ylim(min_g1_g2, max_g1_g2) 
+      g2 <- g2 + ylim(min_g1_g2, max_g1_g2) 
+    } 
+    
+    # And now we arrange the two plots to be one on top of the other. 
+    grid.arrange(grobs = list(g1, g2), ncol = 1) 
+
+    return(TRUE) 
+    
+  } else { 
+    # Easy enough - just quit (for now)! 
+    message(paste0("Subject ", subj_name, " has no values for ", col_name, ". Returning. ")) 
+    flush.console() 
+    return(FALSE) 
+  } 
+} 
+
+
+
+
+
+# Easy town. 
+figure_out_labels <- function(col_name) { 
+  if (isMatch(col_name, 'PP')) { 
+    return(bquote(paste('Perinasal Perspiration [',''^'o','C',''^2,']'))) 
+  } else if (isMatch(col_name, 'HR')) { 
+    return('Heart Rate [BPM]') 
+  } else if (isMatch(col_name, 'BR')) { 
+    return('Breathing Rate [BPM]') 
+  } else if (isMatch(col_name, 'EDA')) { 
+    return(expression(paste('EDA [', mu, 'S]'))) 
+  } 
+  return('Unknown axis.') 
+} 
+
+
+
+
+
+# Even easier town right here. 
+figure_out_title <- function(subj_name, condition, col_name) { 
+  
+  part_one <- "Unknown condition" 
+  if (isMatch(condition, 'IH')) { 
+    part_one <- 'Intermittent Filler' 
+  } else if (isMatch(condition, 'IL')) { 
+    part_one <- 'Intermittent Nothing' 
+  } else if (isMatch(condition, 'BH')) { 
+    part_one <- 'Batch Filler' 
+  } else if (isMatch(condition, 'BL')) { 
+    part_one <- 'Batch Nothing' 
+  } 
+  
+  return(paste0(subj_name, " (", part_one, ") ", col_name)) 
+  
+} 
+
+```
+
+
+\newpage  
+\vspace*{\fill} 
+# Intermittent-Filler (IF) Subjects 
+\vspace*{\fill} 
+\newpage  
+```{r echo=FALSE, message=FALSE, warning=FALSE} 
+# Ah, finally done! Now we just sit back, wait a bit, and relax! 
+n <- 5 
+find_subject_sessions("IH", n) 
+```
+
+\newpage  
+\vspace*{\fill} 
+# Intermittent-Nothing (IN) Subjects 
+\vspace*{\fill} 
+\newpage  
+```{r echo=FALSE, message=FALSE, warning=FALSE} 
+find_subject_sessions("IL", n) 
+```
+
+\newpage  
+\vspace*{\fill} 
+# Batch-Filler (BF) Subjects 
+\vspace*{\fill} 
+\newpage  
+```{r echo=FALSE, message=FALSE, warning=FALSE} 
+find_subject_sessions("BH", n) 
+```
+
+\newpage  
+\vspace*{\fill} 
+# Batch-Nothing (BN) Subjects 
+\vspace*{\fill} 
+\newpage  
+```{r echo=FALSE, message=FALSE, warning=FALSE} 
+find_subject_sessions("BL", n) 
+```

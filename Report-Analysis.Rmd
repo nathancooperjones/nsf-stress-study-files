@@ -1,0 +1,166 @@
+---
+title: "Report Analysis across Groups" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} \sectionfont{\centering} 
+- \usepackage{bbm} 
+- \usepackage{algorithm} 
+- \usepackage[noend]{algpseudocode} 
+--- 
+
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis"} 
+
+library(tidyverse) 
+library(grid) 
+library(gridExtra) 
+library(scales) 
+library(knitr) 
+library(ggpubr) 
+extrafont::loadfonts(quiet=TRUE) 
+
+# function for annotating boxplot with n 
+give.n <- function(x) { 
+  return(c(y=-Inf, vjust = -1, label=length(x))) 
+} 
+
+print_output <- function(output, cex = 0.7) { 
+  tmp <- capture.output(output) 
+  plot.new() 
+  text(0, 1, paste(tmp, collapse='\n'), adj = c(0,1), family = 'mono', cex = cex) 
+} 
+
+essay_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
+
+essay_df <- essay_df %>% 
+  mutate(Condition = factor(Condition, levels = c("IH", "IL", "BH", "BL"))) 
+levels(essay_df$Condition) <- c("IF", "IN", "BF", "BN") 
+
+
+wb_essay_df <- essay_df %>% 
+  filter(Essay == "WB") 
+
+wb_essay_df %>% 
+  ggplot(aes(x = Condition, y = WordCount)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+    labs(title = paste0("ST Word Count Across Groups"), 
+         y = "Word Count") + 
+    stat_summary(fun.y = mean, color = "darkred", geom = "point", 
+                 shape = 3, size = 2) + 
+    stat_summary(fun.data = give.n, geom = "text") + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+  
+cat("ANOVA:  \n  ") 
+anova_test <- aov(WordCount ~ Condition, data = wb_essay_df) 
+print_output(summary(anova_test)) 
+cat("  \n---  \n\n  ") 
+print_output(TukeyHSD(anova_test)) 
+cat("  \n  ") 
+
+wb_essay_df %>% 
+  ggplot(aes(x = Condition, y = SentenceCount)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+    labs(title = paste0("ST Sentence Count Across Groups"), 
+         y = "Sentence Count") + 
+    stat_summary(fun.y = mean, color = "darkred", geom = "point", 
+                 shape = 3, size = 2) + 
+    stat_summary(fun.data = give.n, geom = "text") + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+  
+cat("ANOVA:  \n  ") 
+anova_test <- aov(SentenceCount ~ Condition, data = wb_essay_df) 
+print_output(summary(anova_test)) 
+cat("  \n---  \n\n  ") 
+print_output(TukeyHSD(anova_test)) 
+cat("  \n  ") 
+
+dt_essay_df <- essay_df %>% 
+  filter(Essay == "DT") 
+
+dt_essay_df %>% 
+  ggplot(aes(x = Condition, y = WordCount)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+    labs(title = paste0("DT Word Count Across Groups"), 
+         y = "Word Count") + 
+    stat_summary(fun.y = mean, color = "darkred", geom = "point", 
+                 shape = 3, size = 2) + 
+    stat_summary(fun.data = give.n, geom = "text") + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+  
+cat("ANOVA:  \n  ") 
+anova_test <- aov(WordCount ~ Condition, data = dt_essay_df) 
+print_output(summary(anova_test)) 
+cat("  \n---  \n\n  ") 
+print_output(TukeyHSD(anova_test)) 
+cat("  \n  ") 
+
+dt_essay_df %>% 
+  ggplot(aes(x = Condition, y = SentenceCount)) + 
+    geom_boxplot() + 
+    theme_bw() + 
+    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+    labs(title = paste0("DT Sentence Count Across Groups"), 
+         y = "Sentence Count") + 
+    stat_summary(fun.y = mean, color = "darkred", geom = "point", 
+                 shape = 3, size = 2) + 
+    stat_summary(fun.data = give.n, geom = "text") + 
+    scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+  
+cat("ANOVA:  \n  ") 
+anova_test <- aov(SentenceCount ~ Condition, data = dt_essay_df) 
+print_output(summary(anova_test)) 
+cat("  \n---  \n\n  ") 
+print_output(TukeyHSD(anova_test)) 
+cat("  \n  ") 
+
+``` 
+
+\newpage  
+## Parts of Speech Table  
+
+Number | Tag | Description  
+------------- | ------------- | -------------  
+1	| CC	| Coordinating conjunction  
+2	| CD	| Cardinal number  
+3	| DT	| Determiner  
+4	| EX	| Existential there  
+5	| FW	| Foreign word  
+6	| IN	| Preposition or subordinating conjunction  
+7	| JJ	| Adjective  
+8	| JJR	| Adjective, comparative  
+9	| JJS	| Adjective, superlative  
+10	| LS	| List item marker  
+11	| MD	| Modal  
+12	| NN	| Noun, singular or mass  
+13	| NNS	| Noun, plural  
+14	| NNP	| Proper noun, singular  
+15	| NNPS	| Proper noun, plural  
+16	| PDT	| Predeterminer  
+17	| POS	| Possessive ending  
+18	| PRP	| Personal pronoun  
+19	| PRP$	| Possessive pronoun  
+20	| RB	| Adverb  
+21	| RBR	| Adverb, comparative  
+22	| RBS	| Adverb, superlative  
+23	| RP	| Particle  
+24	| SYM	| Symbol  
+25	| TO	| to  
+26	| UH	| Interjection  
+27	| VB	| Verb, base form  
+28	| VBD	| Verb, past tense  
+29	| VBG	| Verb, gerund or present participle  
+30	| VBN	| Verb, past participle  
+31	| VBP	| Verb, non-3rd person singular present  
+32	| VBZ	| Verb, 3rd person singular present  
+33	| WDT	| Wh-determiner  
+34	| WP	| Wh-pronoun  
+35	| WP$	| Possessive wh-pronoun  
+36	| WRB	| Wh-adverb  
+37 | OTHER | Anything else I might have missed not listed here  
