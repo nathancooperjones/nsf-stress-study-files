@@ -25,7 +25,11 @@ library(gridExtra)
 # change the path to fit your needs 
 full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
 subjects_included <- NULL 
+<<<<<<< HEAD
 gender_df <- read_csv("@Datasets/survey-reports/Pre-SurveyExport.csv", col_types = cols()) 
+=======
+gender_df <- read_csv("@Datasets/survey-reports/Pre-SurveyExport.csv", col_types = cols())
+>>>>>>> 2f887ee291eb0c8ff8b2d03c66a22bf53a41f2a3
 # gender_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols())
 gender_df <- gender_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
 names(gender_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
