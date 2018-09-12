@@ -1,0 +1,165 @@
+---
+title: "Results for NASA-TLX Subscales" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+--- 
+
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis"} 
+## READ ME FIRST!! 
+## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
+## I have done my best to comment all important blocks of code to ensure you know what they do. 
+## Enjoy the script and my attempt at humorous comments! 
+
+# CHANGE THIS 
+# Really nothing for you to change here, just wanted to let you know that if you didn't run `AllSignals.Rmd` first 
+# then this script WILL NOT WORK. Don't be foolish - just do it! 
+
+# Of course, our typical libraries here. Ah, familiarity. 
+library(tidyverse) 
+library(knitr) 
+library(tidyverse) 
+# install.packages("stringi") 
+library(stringi) 
+library(tidyr) 
+library(knitr) 
+library(kableExtra) 
+
+# CHANGE THIS 
+# You should already know what to do. 
+# Note: Try to run this with the most-recent version of the NASA data, downloaded off of somewhere on the internet. 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+nasa_df <- read_csv("@Datasets/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
+subjects_included <- NULL 
+# nasa_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Post-SurveyExport.csv", col_types = cols()) 
+
+# Just taking some columns from the global tibble that we need and getting rid of the rest of them. 
+result_df <- full_df[ , c("Subject", "Condition", "Session")] 
+# Takeing only one row per subject so our results don't get too messed up here! 
+result_df <- result_df[!duplicated(result_df$Subject), ] 
+
+
+
+
+
+# Could this function be titled any more appropriately here? It does exactly what you think it would! 
+plot_nasa_results <- function() { 
+  
+  # Read in the NASA file and select only the important columns, selected by column index of course! 
+  nasa_df <- nasa_df[, c(22, 24:29)] 
+  
+  # Adjust the column names of the `nasa_df` to be easier to access later on rather than the long question format it comes with. 
+  col_names <- c("Subject", "Mental_Demand", "Physical_Demand", "Temporal_Demand", "Performance", "Effort", "Frustration") 
+  colnames(nasa_df) <- col_names 
+  
+  # Merge the the two dataframes we have processed together into one, gloriously informative one. 
+  new_df <- merge(nasa_df, result_df, by = "Subject") 
+  
+  subjects_included <<- new_df$Subject 
+  
+  # Create a column list for each response we wish to generate a bar plot for. 
+  # This essentially means just get rid of "Subject" from `col_names` above since we obviously would not make a bar plot with that, duh! 
+  col_names <- col_names[-1] 
+  
+  # Now we go ahead and make sure that the Condition order is a correct factor with proper levels indicating this order. 
+  new_df <- new_df %>% 
+      mutate(Condition = factor(Condition, levels = c("IH", "BH", "IL", "BL"))) %>% 
+      group_by(Condition) 
+  
+  levels(new_df$Condition) <- c("IF", "BF", "IN", "BN") 
+  
+  for (col in col_names) { 
+
+    # Add in the mean values to the dataframe for this exact column, which is a string (hence the weird `!!sym()` syntax for it). 
+    # We do this so we can plot it way easier later on. If you know a better way, then save me the trouble and take this out! 
+    plotting_df <- new_df %>% 
+      na.omit() %>% 
+      mutate(mean_val = mean(!!sym(col))) %>% 
+      mutate(num = length(Subject)) 
+    
+    # Now we can do the actual plotting. Notice the facet_wrap here to make sure we get a seperate plot for each condition. 
+    print(plotting_df %>% 
+      ggplot(aes(x = Subject, color = Condition)) + 
+      geom_col(aes_string(y = col), fill = "white") + 
+      # By the way, "free_x" here means that we don't need to show every subject for every plot when there is nothing there to plot. 
+      # If you don't understand what I mean, try generating it without the scales argument and see how bad it is. 
+      facet_wrap(~Condition, scales = "free_x") + 
+      scale_y_continuous(breaks = 1:7) + 
+      theme_bw() + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1), panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(), axis.title.x=element_blank(), 
+            axis.title.y=element_blank()) + 
+      theme(legend.position="none") + 
+      ggtitle(paste0("Responses for ", gsub("_", " ", col), " by Group")) + 
+      xlab("Subject") + 
+      geom_hline(aes(yintercept = mean_val), color="black", linetype="dashed") + 
+      geom_text(aes(x=Inf, y=Inf, label=num), show.legend = FALSE, vjust = 1.5, hjust = 1.5) + 
+      scale_color_discrete(name = "Condition") + 
+      # This makes sure that our y-axis ALWAYS shows up to 7, even if no value gets up there for that plot. 
+      coord_cartesian(ylim=c(1, 7)) 
+    ) 
+    
+    # Add some space because why not. 
+    cat("  \n    \n    \n  ") 
+    cat("  \n    \n    \n  ") 
+    
+    # Run the Kruskal test for that column and print it below. 
+    if (col == "Mental_Demand") { 
+      interpret_results("Mental Demand", kruskal.test(Mental_Demand ~ Condition, data = new_df)$p.value) 
+    } else if (col == "Physical_Demand") { 
+      interpret_results("Physical Demand", kruskal.test(Physical_Demand ~ Condition, data = new_df)$p.value) 
+    } else if (col == "Temporal_Demand") { 
+      interpret_results("Temporal Demand", kruskal.test(Temporal_Demand ~ Condition, data = new_df)$p.value) 
+    } else if (col == "Performance") { 
+      interpret_results("Performance", kruskal.test(Performance ~ Condition, data = new_df)$p.value) 
+    } else if (col == "Effort") { 
+      interpret_results("Effort", kruskal.test(Effort ~ Condition, data = new_df)$p.value) 
+    } else if (col == "Frustration") { 
+      interpret_results("Frustration", kruskal.test(Frustration ~ Condition, data = new_df)$p.value) 
+    } 
+      
+  } 
+} 
+
+
+
+
+
+# Similar to Hypothesis testing... just with a different test. 
+interpret_results <- function(name, p_value) { 
+
+  if (p_value > 0.05) { 
+    cat(paste0("Kruskal-Wallis test: \n  \n  ", name, " p = ", round(p_value, 4), " > 0.05\n\n")) 
+  } else if (p_value <= 0.001) { 
+    cat(paste0("Kruskal-Wallis test: \n  \n  ", name, " p = ", round(p_value, 4), " < 0.001  ***\n\n")) 
+  } else if (p_value <= 0.01) { 
+    cat(paste0("Kruskal-Wallis test: \n  \n  ", name, " p = ", round(p_value, 4), " < 0.01  **\n\n")) 
+  } else if (p_value <= 0.05) { 
+    cat(paste0("Kruskal-Wallis test: \n  \n  ", name, " p = ", round(p_value, 4), " < 0.05  *\n\n")) 
+  } 
+  
+} 
+
+``` 
+
+\newpage  
+```{r echo=FALSE, warning = FALSE, message = FALSE, results = "asis", fig.height = 6} 
+# Well now, this is the easiest function call EVER! Sit back and relax - we did it! 
+plot_nasa_results() 
+``` 
+
+\newpage 
+### Subjects Not Included: 
+```{r echo=FALSE, warning = FALSE, message = FALSE} 
+subjects_not_included <- !(result_df$Subject %in% subjects_included) 
+if (length(result_df[subjects_not_included, "Subject"]) == 0) { 
+  cat("None - they are all included! ") 
+} else { 
+  cat(result_df[subjects_not_included, "Subject"]$Subject) 
+} 
+``` 

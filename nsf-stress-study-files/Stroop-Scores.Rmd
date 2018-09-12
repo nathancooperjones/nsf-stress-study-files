@@ -1,0 +1,66 @@
+---
+title: "Stroop Scores"
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+--- 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 6} 
+## READ ME FIRST!! 
+## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
+
+library(tidyverse) 
+library(grid) 
+library(gridExtra) 
+library(scales) 
+library(knitr) 
+library(kableExtra) 
+#install.packages("devtools") 
+#devtools::install_github("kassambara/ggpubr") 
+library(ggpubr) 
+
+# CHANGE THIS 
+# This script is so, so, so simple, do I really need to document anything on here at all? 
+# Whatever, just change the path. 
+df <- read_csv("@Datasets/color_test_score.csv", col_types = cols()) 
+
+# Duh. 
+stroop_df <- df %>% 
+  filter(!is.na(Score))
+
+# Change this if you want to see a different bin width. 
+# A.K.A.: duh. 
+bin_width <- 4 
+
+# How nice of us to let the reader in on our dirty little secret here. 
+cat(paste0("Bin width: ", bin_width)) 
+
+# Duh. 
+n <- nrow(stroop_df) 
+
+# Very duh! 
+print(stroop_df %>% 
+  ggplot(aes(x = Score)) + 
+    geom_histogram(binwidth = bin_width) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(size=8)) + 
+    labs(subtitle = bquote(list(italic('n')==.(n))), 
+         x = "Stroop Score", 
+         y = "count") + 
+    scale_x_continuous(breaks = pretty_breaks(n = 6)) 
+) 
+
+``` 
+
+\newpage 
+## Stroop Score List  
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+# Extremely duh here. 
+kable(stroop_df[ , !(names(stroop_df) %in% c("Notes"))] %>% arrange(Score)) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+``` 

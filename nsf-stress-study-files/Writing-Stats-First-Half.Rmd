@@ -1,0 +1,153 @@
+--- 
+title: "Writing Stats" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+--- 
+
+\newpage 
+Linear Modelling for Normalized Error (Word Count) 
+----- 
+
+Our Linear Model: 
+$$ 
+ Normalized Error_{Word Count} = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+library(tidyverse) 
+library(knitr) 
+library(grid) 
+library(gridExtra) 
+library(kableExtra) 
+library(nlme) 
+library(stringr) 
+library(stringi) 
+library(scales) 
+library(wesanderson) 
+
+# READING IN CSV FILES 
+result_df <- read_csv("@Datasets/testing_df.csv", col_types = cols()) 
+result_df <- result_df %>% 
+  mutate(Condition = factor(Condition, levels = c("BL", "IL", "BH", "IH"))) %>% 
+  filter(Measurement == "PP") 
+colnames(result_df)[which(names(result_df) == "Condition")] <- "Group" 
+
+essay_score_df <- read_csv("@Datasets/essay_score_master_file.csv", col_types = cols()) 
+names(essay_score_df) <- c("Subject", "Score", "GrammaticalErrors",	"UsageErrors", "MechanicErrors", 
+                           "StyleErrors", "WordChoiceLevel", "ConventionsLevel", "FluencyOrganizationLevel") 
+essay_score_df$Session <- str_sub(essay_score_df$Subject, start = -2) 
+essay_score_df$Subject <- str_sub(essay_score_df$Subject, end = 4) 
+essay_score_df$Warning <- stri_extract_first_regex(essay_score_df$Score, "[a-zA-Z]*") 
+essay_score_df$Score <- as.numeric(stri_extract_first_regex(essay_score_df$Score, "[0-9]+")) 
+essay_score_df <- essay_score_df %>% 
+  mutate(TotalErrors = GrammaticalErrors + UsageErrors + MechanicErrors + StyleErrors) %>% 
+  mutate(Session = factor(Session, levels = c("WB", "DT"))) 
+
+nlp_df <- read_csv("@Datasets/essay_nlp_results.csv", col_types = cols()) 
+nlp_df <- nlp_df[ , !names(nlp_df) %in% "Condition"] 
+colnames(nlp_df)[which(names(nlp_df) == "Report")] <- "Session" 
+
+# MERGING CSV FILES 
+full_df <- merge(essay_score_df, result_df, by = "Subject") 
+full_nlp_df <- merge(full_df, nlp_df, by = c("Subject", "Session")) 
+full_nlp_df <- full_nlp_df %>% 
+  mutate(NormalizedErrorWC = TotalErrors / WordCount) %>% 
+  mutate(NormalizedErrorSC = TotalErrors / SentenceCount) 
+
+full_df <- full_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+full_nlp_df <- full_nlp_df %>% 
+  mutate(Group = factor(Group, levels = c("BL", "IL", "BH", "IH"))) 
+
+levels(full_df$Group) <- c("BN", "IN", "BF", "IF") 
+levels(full_nlp_df$Group) <- c("BN", "IN", "BF", "IF") 
+
+# CREATING LINEAR MODEL 
+fit_normalized_errors_wc <- lme(NormalizedErrorWC ~ 1 + Group + Session, data = full_nlp_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_normalized_errors_wc)) 
+``` 
+
+\newpage 
+Linear Modelling for Normalized Error (Sentence Count) 
+----- 
+
+Our Linear Model: 
+$$ 
+ Writing Quality_{Sentence Count} = 1 + Group + Session + 1|Subject 
+$$ 
+
+----- 
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+# CREATING LINEAR MODEL 
+fit_normalized_errors_sc <- lme(NormalizedErrorSC ~ 1 + Group + Session, data = full_nlp_df, random = ~1|Subject, na.action = na.omit) 
+
+# SUMMARIZING LINEAR MODEL 
+print(summary(fit_normalized_errors_sc)) 
+``` 
+
+\newpage 
+## Plotting Trait Levels 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 6} 
+
+essay_score_df %>% 
+  na.omit() %>% 
+  mutate(WordChoiceLevel = factor(WordChoiceLevel, levels = c("Developing", "Proficient", "Advanced"))) %>% 
+  ggplot(aes(x = WordChoiceLevel)) + 
+    geom_bar() + 
+    theme_bw() + 
+    ggtitle("Trait Level for Word Choice") + 
+    ylab("Count") + 
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold")) + 
+    scale_x_discrete(drop = FALSE) 
+
+``` 
+
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 6} 
+
+essay_score_df %>% 
+  na.omit() %>% 
+  mutate(ConventionsLevel = factor(ConventionsLevel, levels = c("Developing", "Proficient", "Advanced"))) %>% 
+  ggplot(aes(x = ConventionsLevel)) + 
+    geom_bar() + 
+    theme_bw() + 
+    ggtitle("Trait Level for Conventions") + 
+    ylab("Count") + 
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold")) + 
+    scale_x_discrete(drop = FALSE) 
+
+``` 
+
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 6} 
+
+essay_score_df %>% 
+  na.omit() %>% 
+  mutate(FluencyOrganizationLevel = factor(FluencyOrganizationLevel, levels = c("Developing", "Proficient", "Advanced"))) %>% 
+  ggplot(aes(x = FluencyOrganizationLevel)) + 
+    geom_bar() + 
+    theme_bw() + 
+    ggtitle("Trait Level for Fluency/Organization") + 
+    ylab("Count") + 
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=14), 
+          axis.title = element_text(size=16, face="bold")) + 
+    scale_x_discrete(drop = FALSE) 
+
+``` 

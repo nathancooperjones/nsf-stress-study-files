@@ -1,0 +1,1228 @@
+---
+title: "Hypothesis Testing for NSF Office Stress Project - Reduced Sensor Set" 
+output: pdf_document 
+geometry: "top=3.5cm, bottom=3cm" 
+header-includes: 
+- \usepackage{booktabs} 
+- \usepackage{sectsty} 
+- \usepackage{titlesec} 
+- \titleformat*{\section}{\raggedleft\Large\bfseries} 
+- \newcommand{\sectionbreak}{\clearpage\vspace*{.35\textheight}} 
+---
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+## READ ME FIRST!! 
+## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
+## I have done my best to comment all important blocks of code to ensure you know what they do. 
+## Enjoy the script and my attempt at humorous comments! 
+
+# CHANGE THIS 
+# Really nothing for you to change here, just wanted to let you know that if you didn't run `AllSignals.Rmd` first 
+# then this script WILL NOT WORK. Don't be foolish - just do it! 
+
+# CHANGE THIS 
+# You might already notice there is another file names `HypothesisTesting_v2.0.Rmd` that is awfully similar to this one. 
+# That's because it is. I will NOT comment this one nearly as much as this one because it is almost exactly the same, 
+# just reduced. Read that file's comments if you want to know what is going on. 
+# Of course, I will actually comment any significant changes to this script where necessary. 
+# A NOTE TO THE READER: want to be a better programmer than me? Challenge yourself to combine the two scripts with options 
+# to generate either of them at a variable's change. It is possible, but it just ends up complicating an already 
+# complicated script. If that sounds awful, then just make the same changes twice, one for each of the documents, and deal with it. 
+# ... 
+# Oh yeah, and there's nothing to change here either. Sorry! 
+
+library(tidyverse) 
+library(knitr) 
+library(grid) 
+library(gridExtra) 
+#install.packages("devtools") 
+#devtools::install_github("kassambara/ggpubr") 
+library(ggpubr) 
+library(kableExtra) 
+
+
+## CHANGE THIS 
+# The paths, I mean! 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+full_df <- full_df[ , !(names(full_df) %in% c("D.EDA", "N.EDA", "D.HR", "N.HR"))] 
+full_df[full_df$Session == "Presentation", "BR"] <- NA 
+stroop_df <- read_csv("@Datasets/color_test_score.csv", col_types = cols()) 
+# stroop_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/color_test_score.csv", col_types = cols())
+
+result_df <- tibble() 
+t_test_df <- tibble() 
+session_compare_df <- tibble() 
+
+isMatch <- function(string_we_have, pattern_we_are_looking_for) { 
+  return(grepl(pattern_we_are_looking_for, string_we_have)) 
+} 
+
+
+
+find_subjects <- function() { 
+  
+  for (subj_name in levels(factor(full_df$Subject))) { 
+    
+    df <- full_df %>% 
+      filter(Subject == subj_name) 
+    
+    tryCatch({ 
+      
+      condition <- df$Condition[1] 
+      df <- df[ , !(names(df) %in% c("Subject", "Condition", "Task"))] 
+      
+      process_subject(df, subj_name, condition) 
+    }, warning = function(w) { 
+      message(paste0("Warnings present for subject ", subj_name, ": ", w, " Continuing process anyway.")) 
+      flush.console() 
+      return() 
+    }, error = function(e) { 
+      message(paste0("Error present for subject ", subj_name, ": ", e, " ")) 
+      flush.console() 
+      return() 
+    }) 
+  } 
+} 
+
+
+
+
+
+process_subject <- function(df, subj_name, condition) { 
+  
+  if (nrow(df) <= 5) { 
+    message(paste0("Dataframe for subject ", subj_name, " is empty. ")) 
+    flush.console() 
+    return() 
+  } 
+
+  all_sessions <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation") 
+
+  df$Session <- factor(df$Session, levels = all_sessions) 
+  
+  temp_df <- df %>% 
+    group_by(Session) %>% 
+    summarize_all(mean, na.rm = TRUE) %>% 
+    mutate(Subject = subj_name, Condition = condition) 
+
+  result_df <<- rbind(result_df, temp_df) 
+  
+} 
+
+
+
+
+
+mess_with_the_columns <- function() { 
+  
+  col_names_final <- c("Subject", "Condition", "Session", "PP", "HR", "BR") 
+  result_df <<- result_df[ , (colnames(result_df) %in% col_names_final)] 
+  result_df <<- result_df[col_names_final] 
+  
+  result_df[result_df == 0] <<- NA 
+  
+} 
+
+
+
+
+
+give.n <- function(x) { 
+  return(c(y=-Inf, vjust = -1, label=length(x))) 
+} 
+
+
+
+
+
+plot1 <- function(condition) { 
+
+  special_purpose_df <- result_df %>% 
+    gather(Measurement, Value, -Subject, -Condition, -Session) 
+
+  # Slight change here, just got rid of the EDA measurements here. 
+  log_measurements <- c("PP") 
+  for (measure in log_measurements) { 
+    special_purpose_df[special_purpose_df$Measurement == measure, ]$Value <- 
+            log(special_purpose_df[special_purpose_df$Measurement == measure, ]$Value) 
+  } 
+
+  special_purpose_df <- special_purpose_df %>% 
+    group_by(Measurement) %>% 
+    spread(Session, Value) %>% 
+    mutate(WB.RB = BaselineWriting - RestingBaseline, 
+           SC.RB = StressCondition - RestingBaseline, 
+           SC.WB = StressCondition - BaselineWriting, 
+           DT.RB = DualTask - RestingBaseline, 
+           DT.WB = DualTask - BaselineWriting, 
+           DT.SC = DualTask - StressCondition, 
+           P.RB = Presentation - RestingBaseline, 
+           P.WB = Presentation - BaselineWriting, 
+           P.SC = Presentation - StressCondition, 
+           P.DT = Presentation - DualTask) %>% 
+  # Another very minor slight change here doing the same thing. 
+  mutate(second = ifelse(Measurement == "PP", "ln( PP )", "")) 
+
+  comparison_levels <- c("WB.RB", "SC.RB", "SC.WB") 
+  for (comp in comparison_levels) { 
+    # And here (again, super minor). 
+    col_vec <- c("PP", "HR", "BR") 
+    sign_vec <- NULL 
+
+    for (col in col_vec) { 
+      do_we_have_anything <- t_test_df %>% 
+          filter(Difference == comp & Condition == condition & Measure == col) 
+      
+      sign <- "?" 
+      if (nrow(do_we_have_anything) == 1) { 
+        sign <- do_we_have_anything$Significance 
+      } 
+      sign_vec <- c(sign_vec, sign) 
+    } 
+    
+    size_vec <- NULL 
+    for (sign in sign_vec) { 
+      if (sign == "?") { 
+        size <- 5 
+      } else { 
+        size <- 8 
+      } 
+      size_vec <- c(size_vec, size) 
+    } 
+
+    labelling_df <- special_purpose_df %>% 
+      filter(Condition == condition) 
+
+    g1 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>% 
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>% 
+            group_by(Measurement) %>% 
+            filter(second == "ln( PP )") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) + 
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+              theme_bw() + 
+              ggtitle(figure_out_special_title(comp, condition)) + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) +  
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_x_discrete(labels=c(" ")) + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1])) 
+       
+    # Notice how there is no g2! That's because I took it out! That means there's a change here, then. 
+         
+    g3 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>%
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>%
+            group_by(Measurement) %>%
+            filter(second == "") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) +
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
+              theme_bw() + 
+              ggtitle(" ") + 
+              ylab(expression(Delta~bar(" . "))) + 
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[2], vjust = 1.2, size = size_vec[2]) + 
+              annotate("text", x=2, y=Inf, label= sign_vec[3], vjust = 1.2, size = size_vec[3])) 
+    
+    g <- ggarrange(g1, g3, ncol = 2, nrow = 1) 
+    
+    print(g) 
+    
+    cat("  \n  \n  \n  ") 
+  } 
+} 
+
+
+
+
+
+plot1_dt <- function(condition) { 
+  
+  special_purpose_df <- result_df %>% 
+    gather(Measurement, Value, -Subject, -Condition, -Session) 
+
+  log_measurements <- c("PP") 
+  for (measure in log_measurements) { 
+    special_purpose_df[special_purpose_df$Measurement == measure, ]$Value <- 
+            log(special_purpose_df[special_purpose_df$Measurement == measure, ]$Value) 
+  } 
+
+  special_purpose_df <- special_purpose_df %>% 
+    group_by(Measurement) %>% 
+    spread(Session, Value) %>% 
+    mutate(WB.RB = BaselineWriting - RestingBaseline, 
+           SC.RB = StressCondition - RestingBaseline, 
+           SC.WB = StressCondition - BaselineWriting, 
+           DT.RB = DualTask - RestingBaseline, 
+           DT.WB = DualTask - BaselineWriting, 
+           DT.SC = DualTask - StressCondition, 
+           P.RB = Presentation - RestingBaseline, 
+           P.WB = Presentation - BaselineWriting, 
+           P.SC = Presentation - StressCondition, 
+           P.DT = Presentation - DualTask) %>% 
+  mutate(second = ifelse(Measurement == "PP", "ln( PP )", "")) 
+  
+  comparison_levels <- c("DT.RB", "DT.WB", "DT.SC") 
+  dt_lst <- list() 
+  i <- 1 
+  for (comp in comparison_levels) { 
+    col_vec <- c("PP", "HR", "BR") 
+    sign_vec <- NULL 
+
+    for (col in col_vec) { 
+      do_we_have_anything <- t_test_df %>% 
+          filter(Difference == comp & Condition == condition & Measure == col) 
+      
+      sign <- "?" 
+      if (nrow(do_we_have_anything) == 1) { 
+        sign <- do_we_have_anything$Significance 
+      } 
+      sign_vec <- c(sign_vec, sign) 
+    } 
+    
+    size_vec <- NULL 
+    for (sign in sign_vec) { 
+      if (sign == "?") { 
+        size <- 5 
+      } else { 
+        size <- 8 
+      } 
+      size_vec <- c(size_vec, size) 
+    } 
+
+    labelling_df <- special_purpose_df %>% 
+      filter(Condition == condition) 
+
+    g1 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>% 
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>% 
+            group_by(Measurement) %>% 
+            filter(second == "ln( PP )") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) + 
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+              theme_bw() + 
+              ggtitle(figure_out_special_title(comp, condition)) + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) +  
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_x_discrete(labels=c(" ")) + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1])) 
+      
+    g3 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>%
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>%
+            group_by(Measurement) %>%
+            filter(second == "") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) +
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
+              theme_bw() + 
+              ggtitle(" ") + 
+              ylab(expression(Delta~bar(" . "))) + 
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[2], vjust = 1.2, size = size_vec[2]) + 
+              annotate("text", x=2, y=Inf, label= sign_vec[3], vjust = 1.2, size = size_vec[3])) 
+    
+    g <- ggarrange(g1, g3, ncol = 2, nrow = 1) 
+    
+    dt_lst[[i]] <- g 
+    i <- i + 1 
+    
+  } 
+  return(ggarrange(dt_lst[[1]], dt_lst[[2]], dt_lst[[3]], ncol = 1, nrow = 3)) 
+} 
+
+
+
+
+
+plot1_p <- function(condition) { 
+
+  special_purpose_df <- result_df %>% 
+    gather(Measurement, Value, -Subject, -Condition, -Session) %>% 
+    filter(Measurement != "BR") 
+
+  log_measurements <- c("PP") 
+  for (measure in log_measurements) { 
+    special_purpose_df[special_purpose_df$Measurement == measure, ]$Value <- 
+            log(special_purpose_df[special_purpose_df$Measurement == measure, ]$Value) 
+  } 
+
+  special_purpose_df <- special_purpose_df %>% 
+    group_by(Measurement) %>% 
+    spread(Session, Value) %>% 
+    mutate(WB.RB = BaselineWriting - RestingBaseline, 
+           SC.RB = StressCondition - RestingBaseline, 
+           SC.WB = StressCondition - BaselineWriting, 
+           DT.RB = DualTask - RestingBaseline, 
+           DT.WB = DualTask - BaselineWriting, 
+           DT.SC = DualTask - StressCondition, 
+           P.RB = Presentation - RestingBaseline, 
+           P.WB = Presentation - BaselineWriting, 
+           P.SC = Presentation - StressCondition, 
+           P.DT = Presentation - DualTask) %>% 
+  mutate(second = ifelse(Measurement == "PP", "ln( PP )", "")) 
+
+  comparison_levels <- c("P.RB", "P.WB", "P.SC", "P.DT") 
+  dt_lst <- list() 
+  i <- 1 
+  for (comp in comparison_levels) { 
+    
+    col_vec <- c("PP", "HR") 
+    sign_vec <- NULL 
+    for (col in col_vec) { 
+      do_we_have_anything <- t_test_df %>% 
+          filter(Difference == comp & Condition == condition & Measure == col) 
+      
+      sign <- "?" 
+      if (nrow(do_we_have_anything) == 1) { 
+        sign <- do_we_have_anything$Significance 
+      } 
+      sign_vec <- c(sign_vec, sign) 
+    } 
+    
+    size_vec <- NULL 
+    for (sign in sign_vec) { 
+      if (sign == "?") { 
+        size <- 5 
+      } else { 
+        size <- 8 
+      } 
+      size_vec <- c(size_vec, size) 
+    } 
+
+    labelling_df <- special_purpose_df %>% 
+      filter(Condition == condition) 
+
+    g1 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>% 
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>% 
+            group_by(Measurement) %>% 
+            filter(second == "ln( PP )") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) + 
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+              theme_bw() + 
+              ggtitle(figure_out_special_title(comp, condition)) + 
+              ylab(expression(Delta~"ln("~bar("PP")~")")) +  
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_x_discrete(labels=c(" ")) + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[1], vjust = 1.2, size = size_vec[1])) 
+            
+    g3 <- ggplotGrob(labelling_df %>% 
+            ungroup(Measurement) %>%
+            mutate(Measurement = factor(Measurement, levels = col_vec)) %>%
+            group_by(Measurement) %>%
+            filter(second == "") %>% 
+            ggplot(aes_string(x = "Measurement", y = comp)) +
+              geom_boxplot() + 
+              geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) +
+              theme_bw() + 
+              ggtitle(" ") + 
+              ylab(expression(Delta~bar(" . "))) + 
+              theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) +
+              stat_summary(fun.data = give.n, geom = "text") + 
+              scale_y_continuous(expand = c(0.15, 0, 0.3, 0)) + 
+              annotate("text", x=1, y=Inf, label= sign_vec[2], vjust = 1.2, size = size_vec[2])) 
+    
+    g <- ggarrange(g1, g3, ncol = 2, nrow = 1) 
+    
+    dt_lst[[i]] <- g 
+    i <- i + 1 
+  } 
+  return(ggarrange(dt_lst[[1]], dt_lst[[2]], dt_lst[[3]], dt_lst[[4]], ncol = 1, nrow = 4)) 
+} 
+
+
+
+
+
+plot2 <- function(testing_df, test_type, col, cond) { 
+  
+  n <- nrow(testing_df) 
+  # Very minor change here. 
+  if (col == "PP") { 
+    test_type <- "tt" 
+  } 
+  
+  label <- figure_out_labels(col) 
+  title <- figure_out_title(col, cond, test_type) 
+  
+  # And a not so minor change here... 
+  # Remember, in the reduced version, we cut out all Presentation signals for Breathing Rate, so we adjust that here. 
+  if (col == "BR") { 
+    
+    comparison_levels <- c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC") 
+    
+    do_we_have_anything <- t_test_df %>% 
+        filter(Measure == col & Condition == cond) 
+    
+    labels_vec <- c("WB-RB", "SC-RB", "SC-WB", "DT-RB", "DT-WB", "DT-SC") 
+    if (nrow(do_we_have_anything) == length(comparison_levels)) { 
+      sign <- do_we_have_anything$Significance 
+      labels_vec <- paste(sign, labels_vec, sep = "\n") 
+    } 
+    
+    middle_df <- tibble() 
+    middle_df <- testing_df %>% 
+            gather(Comparison, Value, -Subject, -Condition, -Measurement, 
+                   -RestingBaseline, -BaselineWriting, -StressCondition, -DualTask) %>% 
+            mutate(Comparison = factor(Comparison, levels = comparison_levels)) 
+    
+    print(ggplot(middle_df, aes(x = Comparison, y = Value)) + 
+            geom_boxplot() + 
+            labs(title = title, 
+                y = label) + 
+            theme_bw() + 
+            theme(axis.title.x = element_blank(), 
+                  axis.text.x = element_text(size=11, angle = 45, hjust = 1)) + 
+            geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+            stat_summary(fun.y = mean, color = "darkred", geom = "point", shape = 3, size = 2, show_guide = FALSE) + 
+            stat_summary(fun.data = give.n, geom = "text") + 
+            scale_y_continuous(expand = c(0.15, 0, 0.15, 0)) + 
+            annotate("text", x=1, y=Inf, label= sign[1], vjust = 1.2, size = 10) + 
+            annotate("text", x=2, y=Inf, label= sign[2], vjust = 1.2, size = 10) + 
+            annotate("text", x=3, y=Inf, label= sign[3], vjust = 1.2, size = 10) + 
+            annotate("text", x=4, y=Inf, label= sign[4], vjust = 1.2, size = 10) + 
+            annotate("text", x=5, y=Inf, label= sign[5], vjust = 1.2, size = 10) + 
+            annotate("text", x=6, y=Inf, label= sign[6], vjust = 1.2, size = 10) 
+    ) 
+    
+  } else { 
+    
+    # Just continue as normal. 
+    comparison_levels <- c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", 
+                           "P.RB", "P.WB", "P.SC", "P.DT") # add any other here for intended order 
+    
+    do_we_have_anything <- t_test_df %>% 
+        filter(Measure == col & Condition == cond) 
+    
+    labels_vec <- c("WB-RB", "SC-RB", "SC-WB", "DT-RB", "DT-WB", "DT-SC", "P-RB", "P-WB", "P-SC", "P-DT") 
+    if (nrow(do_we_have_anything) == length(comparison_levels)) { 
+      sign <- do_we_have_anything$Significance 
+      labels_vec <- paste(sign, labels_vec, sep = "\n") 
+    } 
+    
+    middle_df <- tibble() 
+    middle_df <- testing_df %>% 
+            gather(Comparison, Value, -Subject, -Condition, -Measurement, 
+                   -RestingBaseline, -BaselineWriting, -StressCondition, -DualTask, - Presentation) %>% 
+            mutate(Comparison = factor(Comparison, levels = comparison_levels)) 
+    
+    print(ggplot(middle_df, aes(x = Comparison, y = Value)) + 
+            geom_boxplot() + 
+            labs(title = title, 
+                y = label) + 
+            theme_bw() + 
+            theme(axis.title.x = element_blank(), 
+                  axis.text.x = element_text(size=11, angle = 45, hjust = 1)) + 
+            geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+            stat_summary(fun.y = mean, color = "darkred", geom = "point", shape = 3, size = 2, show_guide = FALSE) + 
+            stat_summary(fun.data = give.n, geom = "text") + 
+            scale_y_continuous(expand = c(0.15, 0, 0.15, 0)) + 
+            annotate("text", x=1, y=Inf, label= sign[1], vjust = 1.2, size = 10) + 
+            annotate("text", x=2, y=Inf, label= sign[2], vjust = 1.2, size = 10) + 
+            annotate("text", x=3, y=Inf, label= sign[3], vjust = 1.2, size = 10) + 
+            annotate("text", x=4, y=Inf, label= sign[4], vjust = 1.2, size = 10) + 
+            annotate("text", x=5, y=Inf, label= sign[5], vjust = 1.2, size = 10) + 
+            annotate("text", x=6, y=Inf, label= sign[6], vjust = 1.2, size = 10) + 
+            annotate("text", x=7, y=Inf, label= sign[7], vjust = 1.2, size = 10) + 
+            annotate("text", x=8, y=Inf, label= sign[8], vjust = 1.2, size = 10) + 
+            annotate("text", x=9, y=Inf, label= sign[9], vjust = 1.2, size = 10) + 
+            annotate("text", x=10, y=Inf, label= sign[10], vjust = 1.2, size = 10) 
+    ) 
+  } 
+} 
+
+
+
+
+
+test_time <- function(condition, col, full = TRUE) { 
+
+  test_type <- "t" 
+  end_str <- NA 
+
+  temp <- result_df[!is.na(result_df[[col]]), ] 
+
+  n <- length(levels(factor(temp$Session))) * 7 
+  temp <- temp %>% 
+    group_by(Condition) %>% 
+    filter(Condition == condition && n() >= n) 
+
+  if (nrow(temp) == 0) { 
+    if (!full) { 
+      message(paste0(condition, " has LESS than 7 subjects for ", col, ". Cannot continue with test. ")) 
+      flush.console() 
+    } else { 
+      cat(paste0(condition, " has LESS than 7 subjects for ", col, ". Cannot continue with test. \n-----\n")) 
+    } 
+  } else { 
+    
+    # Minor change here. 
+    if (col == "PP") { 
+      shift_val <- 0 
+      if (min(temp[[col]]) <= 0) { 
+        shift_val <- min(temp[[col]]) + 0.001 
+      } 
+      temp[[col]] <- log(temp[[col]]) + shift_val 
+    } 
+    
+    temp_col <- temp[[col]] 
+    shapiro_test_results <- shapiro.test(temp_col) 
+    if (shapiro_test_results$p.value < 0.05) { 
+      if (!full) { 
+        message(paste0(col, " is NOT normal (p = ", round(shapiro_test_results$p.value, 4), "). Adjusting with `log` now. ")) 
+        flush.console() 
+      } 
+
+      if (min(temp_col) <= 0) { 
+        shift_val <- min(temp_col) + 0.001 
+        temp_col <- temp_col + shift_val 
+        if (!full) { 
+          message(paste0(col, " values less than 0, shifted each value up by ", shift_val, ". ")) 
+          flush.console() 
+        } 
+      } 
+
+      if (col != "PP") { 
+        shift_val <- 0 
+        if (min(temp_col) <= 0) { 
+          shift_val <- min(temp_col) + 0.001 
+        } 
+        temp_col <- log(temp_col) + shift_val 
+      } 
+
+      shapiro_test_results <- shapiro.test(temp_col) 
+      
+      if (shapiro_test_results$p.value < 0.05) { 
+        if (full) { 
+          end_str <- paste0("In the following tests, we applied ln(", col, "). \n\n") 
+        } else { 
+          message(paste0("Transformed data for ", col, " is still NOT normal (p = ", round(shapiro_test_results$p.value, 4), 
+                       "). Continuing with Wilcoxn test. ")) 
+          flush.console() 
+        } 
+
+        test_type <- "w" 
+        temp_for_plotting <- temp 
+        if (col != "PP") { 
+          shift_val <- 0 
+          if (min(temp[[col]]) <= 0) { 
+            shift_val <- min(temp[[col]]) + 0.001 
+          } 
+          temp[[col]] <- log(temp[[col]]) + shift_val 
+        } 
+      } else { 
+        if (!full) { 
+          message(paste0("Transformed data for ", col, " is now normal (p = ", round(shapiro_test_results$p.value, 4), 
+                         "). Continuing with t-test. ")) 
+          flush.console() 
+        } 
+
+        test_type <- "tt" 
+        if (col != "PP") { 
+          shift_val <- 0 
+          if (min(temp[[col]]) <= 0) { 
+            shift_val <- min(temp[[col]]) + 0.001 
+          } 
+          temp[[col]] <- log(temp[[col]]) + shift_val 
+        } 
+      } 
+    } else { 
+      if (!full) { 
+        message(paste0(col, " is normal (p = ", round(shapiro_test_results$p.value, 4), "). Continuing with t-test. ")) 
+        flush.console() 
+      } 
+      test_type <- "t" 
+    } 
+    
+    conditions <- levels(factor(temp$Condition)) 
+    for (cond in conditions) { 
+      
+      temp_cond <- temp %>% 
+        filter(Condition == cond) 
+      
+      testing_df <- tibble() 
+      presentation <- TRUE 
+      
+      # Perhaps the biggest change here is ensuring we don't even TRY to plot Presentation data for Breathing Rate signals. 
+      # Note my attempt at ensuring this below that miraculously works somehow. 
+      if (all(is.finite((temp_cond %>% filter(Session == "Presentation"))$BR))) { 
+        # This `presentation` variable helps us out later when we are computing the test-results. 
+        presentation <- FALSE 
+        testing_df <- temp_cond %>% 
+          gather(Measurement, Value, -Subject, -Condition, -Session) %>% 
+          spread(Session, Value) %>% 
+          filter(Measurement == col) %>% 
+          filter(!is.na(col)) %>% 
+          mutate(WB.RB = BaselineWriting - RestingBaseline, 
+                 SC.RB = StressCondition - RestingBaseline, 
+                 SC.WB = StressCondition - BaselineWriting, 
+                 DT.RB = DualTask - RestingBaseline, 
+                 DT.WB = DualTask - BaselineWriting, 
+                 DT.SC = DualTask - StressCondition) 
+      } else { 
+        # Just continue as normal. 
+        testing_df <- temp_cond %>% 
+          gather(Measurement, Value, -Subject, -Condition, -Session) %>% 
+          spread(Session, Value) %>% 
+          filter(Measurement == col) %>% 
+          filter(!is.na(col)) %>% 
+          mutate(WB.RB = BaselineWriting - RestingBaseline, 
+                 SC.RB = StressCondition - RestingBaseline, 
+                 SC.WB = StressCondition - BaselineWriting, 
+                 DT.RB = DualTask - RestingBaseline, 
+                 DT.WB = DualTask - BaselineWriting, 
+                 DT.SC = DualTask - StressCondition, 
+                 P.RB = Presentation - RestingBaseline, 
+                 P.WB = Presentation - BaselineWriting, 
+                 P.SC = Presentation - StressCondition, 
+                 P.DT = Presentation - DualTask) 
+      }  
+      t_df <- tibble() 
+      if (col == "PP") { 
+        if (!full) { 
+          message(paste0(col, " is close enough to normal. Continuing with t-test. ")) 
+          flush.console() 
+        } 
+        test_type = "t" 
+      } 
+      if (test_type == "t" || test_type == "tt") { 
+        name <- "t-test" 
+        if (test_type == "tt") { 
+          name <- "Transformed t-test" 
+        } 
+        
+        test <- "Writing Baseline - Resting Baseline" 
+        p <- t.test(testing_df[["WB.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "WB.RB", Measure = col, Condition = cond, p = p, 
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(WB.RB))), Significance = sign)) 
+        
+        test <- "Stress Condition - Resting Baseline" 
+        p <- t.test(testing_df[["SC.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "SC.RB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(SC.RB))), Significance = sign)) 
+        
+        test <- "StressCondition - Writing Baseline" 
+        p <- t.test(testing_df[["SC.WB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "SC.WB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(SC.WB))), Significance = sign)) 
+        
+        test <- "Dual Task - Resting Baseline" 
+        p <- t.test(testing_df[["DT.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.RB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.RB))), Significance = sign)) 
+        
+        test <- "Dual Task - Writing Baseline" 
+        p <- t.test(testing_df[["DT.WB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.WB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.WB))), Significance = sign)) 
+        
+        test <- "Dual Task - Stress Condition" 
+        p <- t.test(testing_df[["DT.SC"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.SC", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.SC))), Significance = sign)) 
+        
+        # See? 
+        if (presentation) { 
+          test <- "Presentation - Resting Baseline" 
+          p <- t.test(testing_df[["P.RB"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.RB", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.RB))), Significance = sign)) 
+          
+          test <- "Presentation - Writing Baseline" 
+          p <- t.test(testing_df[["P.WB"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.WB", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.WB))), Significance = sign)) 
+          
+          test <- "Presentation - Stress Condition" 
+          p <- t.test(testing_df[["P.SC"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.SC", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.SC))), Significance = sign)) 
+          
+          test <- "Presentation - Dual Task" 
+          p <- t.test(testing_df[["P.DT"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.DT", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.DT))), Significance = sign)) 
+        } 
+      } else if (test_type == "w" ) { 
+        name <- "Wilcoxon" 
+        
+        test <- "Writing Baseline - Resting Baseline" 
+        p <- wilcox.test(testing_df[["WB.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "WB.RB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(WB.RB))), Significance = sign)) 
+        
+        test <- "Stress Condition - Resting Baseline" 
+        p <- wilcox.test(testing_df[["SC.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "SC.RB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(SC.RB))), Significance = sign)) 
+        
+        test <- "StressCondition - Writing Baseline" 
+        p <- wilcox.test(testing_df[["SC.WB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "SC.WB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(SC.WB))), Significance = sign)) 
+        
+        test <- "Dual Task - Resting Baseline" 
+        p <- wilcox.test(testing_df[["DT.RB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.RB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.RB))), Significance = sign)) 
+        
+        test <- "Dual Task - Writing Baseline" 
+        p <- wilcox.test(testing_df[["DT.WB"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.WB", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.WB))), Significance = sign)) 
+        
+        test <- "Dual Task - Stress Condition" 
+        p <- wilcox.test(testing_df[["DT.SC"]])$p.value 
+        sign <- interpret_results(test, name, cond, p) 
+        t_df <- rbind(t_df, tibble(Difference = "DT.SC", Measure = col, Condition = cond, p = p,                                     
+                                   Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(DT.SC))), Significance = sign)) 
+        
+        if (presentation) { 
+          test <- "Presentation - Resting Baseline" 
+          p <- wilcox.test(testing_df[["P.RB"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.RB", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.RB))), Significance = sign)) 
+          
+          test <- "Presentation - Writing Baseline" 
+          p <- wilcox.test(testing_df[["P.WB"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.WB", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.WB))), Significance = sign)) 
+          
+          test <- "Presentation - Stress Condition" 
+          p <- wilcox.test(testing_df[["P.SC"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.SC", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.SC))), Significance = sign)) 
+          
+          test <- "Presentation - Dual Task" 
+          p <- wilcox.test(testing_df[["P.DT"]])$p.value 
+          sign <- interpret_results(test, name, cond, p) 
+          t_df <- rbind(t_df, tibble(Difference = "P.DT", Measure = col, Condition = cond, p = p,                                     
+                                     Name = test, Test = name, n = nrow(testing_df %>% filter(!is.na(P.DT))), Significance = sign)) 
+        
+          testing_df <- temp_for_plotting  %>% 
+            filter(Condition == cond) %>% 
+            gather(Measurement, Value, -Subject, -Condition, -Session) %>% 
+            spread(Session, Value) %>% 
+            filter(Measurement == col) %>% 
+            filter(!is.na(col)) %>% 
+            mutate(WB.RB = BaselineWriting - RestingBaseline, 
+                   SC.RB = StressCondition - RestingBaseline, 
+                   SC.WB = StressCondition - BaselineWriting, 
+                   DT.RB = DualTask - RestingBaseline, 
+                   DT.WB = DualTask - BaselineWriting, 
+                   DT.SC = DualTask - StressCondition, 
+                   P.RB = Presentation - RestingBaseline, 
+                   P.WB = Presentation - BaselineWriting, 
+                   P.SC = Presentation - StressCondition, 
+                   P.DT = Presentation - DualTask) 
+        
+        } else { 
+          testing_df <- temp_for_plotting  %>% 
+            filter(Condition == cond) %>% 
+            gather(Measurement, Value, -Subject, -Condition, -Session) %>% 
+            spread(Session, Value) %>% 
+            filter(Measurement == col) %>% 
+            filter(!is.na(col)) %>% 
+            mutate(WB.RB = BaselineWriting - RestingBaseline, 
+                   SC.RB = StressCondition - RestingBaseline, 
+                   SC.WB = StressCondition - BaselineWriting, 
+                   DT.RB = DualTask - RestingBaseline, 
+                   DT.WB = DualTask - BaselineWriting, 
+                   DT.SC = DualTask - StressCondition) 
+        } 
+      } 
+      
+      if (full) { 
+        lst <- list("testing_df" = testing_df, "test_type" = test_type, "col" = col, "cond" = cond, "end_str" = end_str) 
+        if (nrow(session_compare_df) > 0) { 
+          session_compare_df <<- rbind(session_compare_df, testing_df) 
+        } else { 
+          session_compare_df <<- testing_df 
+        } 
+        return(lst) 
+      } 
+      
+      t_test_df <<- rbind(t_test_df, t_df) 
+      return(NA) 
+    } 
+  } 
+  return(NA) 
+} 
+
+
+
+
+
+interpret_results <- function(test, name, cond, p_value) { 
+  if (p_value > 0.05) { 
+    return(" ") 
+  } else if (p_value <= 0.001) { 
+    return("***") 
+  } else if (p_value <= 0.01) { 
+    return("**") 
+  } else if (p_value <= 0.05) { 
+    return("*") 
+  } 
+} 
+
+
+
+interpret_results_after <- function(cond, col) { 
+  comparison_levels <- c("WB.RB", "SC.RB", "SC.WB", "DT.RB", "DT.WB", "DT.SC", 
+                         "P.RB", "P.WB", "P.SC", "P.DT") 
+  
+  for (test in comparison_levels) { 
+    do_we_have_anything <- t_test_df %>% 
+      filter(Measure == col & Condition == cond & Difference == test) 
+    
+    if (nrow(do_we_have_anything) == 1) { 
+      p_value <- do_we_have_anything$p 
+      test <- do_we_have_anything$Name 
+      name <- do_we_have_anything$Test 
+      if (p_value > 0.05) { 
+        cat(paste0(test, "\n", name, " p = ", round(p_value, 4), " > 0.05\n\n")) 
+      } else if (p_value <= 0.001) { 
+        cat(paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.001  ***\n\n")) 
+      } else if (p_value <= 0.01) { 
+        cat(paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.01  **\n\n")) 
+      } else if (p_value <= 0.05) { 
+        cat(paste0(test, "\n", name, " p = ", round(p_value, 4), " < 0.05  *\n\n")) 
+      } 
+    } 
+  } 
+} 
+
+
+
+
+
+figure_out_labels <- function(col_name) { 
+  if (isMatch(col_name, 'PP')) { 
+    return(expression(Delta~paste('Perinasal Perspiration [',''^'o','C',''^2,']'))) 
+  } else if (isMatch(col_name, 'HR')) { 
+    return(expression(Delta~'Heart Rate [BPM]')) 
+  } else if (isMatch(col_name, 'BR')) { 
+    return(expression(Delta~'Breathing Rate [BPM]')) 
+  } else if (isMatch(col_name, 'EDA')) { 
+    return(expression(Delta~'EDA ['~mu~'S]')) 
+  } 
+  return('Unknown axis.') 
+} 
+
+
+
+figure_out_special_title <- function(difference, condition) { 
+  return(paste0(condition, ": ", gsub(".", " - ", difference, fixed = TRUE))) 
+} 
+
+
+
+figure_out_title <- function(col_name, condition, test_type) { 
+  if (test_type != "tt") { 
+    return(paste0(condition, ": ", col_name)) 
+  } 
+  return(paste0(condition, ": ln(", col_name, ") ")) 
+} 
+
+```
+
+Below are the test results for each of the Conditions that had n >= 7 subjects. Statistical testing can have three different possible outcomes: the data is already normal (t-test), the logarithm of the data is normal (t-test with log data), or the data is NOT normal (Wilcoxon test). 
+  
+For notation, let:  
+  
+**WB-RB** = Writing Baseline - Resting Baseline  
+**SC-RB** = Stress Condition - Resting Baseline  
+**SC-WB** = Stress Condition - Writing Baseline  
+**DT-RB** = Dual Task - Resting Baseline  
+**DT-WB** = Dual Task - Writing Baseline  
+**DT-SC** = Dual Task - Stress Condition  
+**P-RB** = Presentation - Resting Baseline  
+**P-WB** = Presentation - Writing Baseline  
+**P-SC** = Presentation - Stress Condition  
+**P-DT** = Presentation - Dual Task  
+
+For each of the graphs, let:  
+  
+`*` = 0.01 < p <= 0.05  
+`**` = 0.001 < p <= 0.01  
+`***` = p <= 0.001  
+`?` = Did not run statistical test (*n* < 7)  
+  
+  
+  
+----- 
+Differences in **Reduced Sensor Set**:  
+  
+* Signals for `D.EDA`, `N.EDA`, `D.HR`, and `N.HR` and removed completely. 
+* `Breathing Rate (BR)` measurements for the `Presentation` session are removed completely. 
+* Easier on the eyes. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+## MAIN 
+find_subjects() 
+mess_with_the_columns() 
+```
+
+\newpage  
+# Intermittent-High (IH) 
+\newpage  
+## Sensor Channels per Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+measure_vec <- c("PP", "HR", "BR") 
+cond <- "IH" 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col, FALSE) 
+} 
+plot1(cond) 
+``` 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_dt(cond) 
+``` 
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_p(cond) 
+``` 
+
+\newpage 
+## Sensor Channel across Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col) 
+  if (!is.na(lst)) { 
+    plot2(as.tibble(lst[[1]]), as.character(lst[[2]]), as.character(lst[[3]]), as.character(lst[[4]])) 
+    if (!is.na(as.character(lst[[5]]))) { 
+      cat(as.character(lst[[5]])) 
+      lst[[5]] <- NA 
+    }
+    interpret_results_after(cond, col) 
+    plot.new() 
+  } 
+} 
+```
+
+\newpage  
+# Intermittent-Low (IL) 
+\newpage  
+## Sensor Channels per Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+cond <- "IL" 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col, FALSE) 
+} 
+plot1(cond) 
+``` 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_dt(cond) 
+``` 
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_p(cond) 
+``` 
+
+\newpage 
+## Sensor Channel across Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col) 
+  if (!is.na(lst)) { 
+    plot2(as.tibble(lst[[1]]), as.character(lst[[2]]), as.character(lst[[3]]), as.character(lst[[4]])) 
+    interpret_results_after(cond, col) 
+    plot.new() 
+  } 
+} 
+```
+
+\newpage  
+# Batch-High (BH) 
+\newpage  
+## Sensor Channels per Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+cond <- "BH" 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col, FALSE) 
+} 
+plot1(cond) 
+``` 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_dt(cond) 
+``` 
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_p(cond) 
+``` 
+
+\newpage  
+## Sensor Channel across Session ## 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col) 
+  if (!is.na(lst)) { 
+    plot2(as.tibble(lst[[1]]), as.character(lst[[2]]), as.character(lst[[3]]), as.character(lst[[4]])) 
+    interpret_results_after(cond, col) 
+    plot.new() 
+  } 
+} 
+```
+
+\newpage  
+# Batch-Low (BL) 
+\newpage  
+## Sensor Channels per Session 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+cond <- "BL" 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col, FALSE) 
+} 
+plot1(cond) 
+``` 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_dt(cond) 
+``` 
+\newpage 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 12} 
+plot1_p(cond) 
+``` 
+
+\newpage 
+## Sensor Channel across Session 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+for (col in measure_vec) { 
+  lst <- test_time(cond, col) 
+  if (!is.na(lst)) { 
+    plot2(as.tibble(lst[[1]]), as.character(lst[[2]]), as.character(lst[[3]]), as.character(lst[[4]])) 
+    interpret_results_after(cond, col) 
+    plot.new() 
+  } 
+} 
+``` 
+
+\newpage  
+# Across Sessions  
+\newpage  
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+
+diff_vec <- c("DT.RB", "SC.RB", "P.RB") 
+# A very minor change here. 
+measure_vec <- c("PP", "HR", "BR") 
+score_threshold <- 0 
+
+for (diff in diff_vec) { 
+  for (measure in measure_vec) { 
+    
+    # Again, ensuring that under no means do we plot Presentation data for Breathing Rate! If we see it's PP for BR, just skip it. 
+    # We don't want erros, please! :) 
+    if (diff == "P.RB" & measure == "BR") { 
+      next 
+    } 
+
+    measure_label <- measure 
+    if (measure == "PP") { 
+      measure_label <- paste0("ln(", measure, ")") 
+    } 
+
+    anova_df <- tibble() 
+    bad_subjects <- NULL 
+    if (isMatch(diff, "SC")) { 
+
+      stroop_df <- stroop_df %>% 
+        filter(!is.na(Score)) 
+      
+      filtered_stroop_df <- stroop_df %>% 
+        filter(Score < score_threshold) 
+      
+      bad_subjects <- filtered_stroop_df$Subject 
+      
+      anova_df <- session_compare_df[c("Condition", "Measurement", "Subject", diff)] %>% 
+        filter(Measurement == measure) %>% 
+        na.omit() %>% 
+        filter(!(Subject %in% bad_subjects)) 
+      
+    } else { 
+      anova_df <- session_compare_df[c("Condition", "Measurement", diff)] %>% 
+        filter(Measurement == measure) %>% 
+        na.omit() 
+    } 
+    
+    condition_vec <- c("IH", "BH", "IL", "BL") 
+
+    print(anova_df %>% 
+      ungroup(Condition) %>% 
+      mutate(Condition = factor(Condition, levels = condition_vec)) %>% 
+      group_by(Condition) %>% 
+      ggplot(aes_string(x = "Condition", y = diff)) + 
+        geom_boxplot() + 
+        theme_bw() + 
+        geom_hline(yintercept=0, linetype="dashed", color = "red", alpha = 0.6, size=1) + 
+        theme(axis.title.x=element_blank(), axis.text.x = element_text(size=10)) + 
+        labs(title = paste0(gsub(".", " - ", diff, fixed = TRUE), " for ", measure_label), 
+             y = "Difference") + 
+        stat_summary(fun.y = mean, color = "darkred", geom = "point", shape = 3, size = 2, show_guide = FALSE) + 
+        stat_summary(fun.data = give.n, geom = "text") + 
+        scale_y_continuous(expand = c(0.1, 0, 0.1, 0)) 
+    ) 
+    
+    if (isMatch(diff, "SC") & !is.null(bad_subjects)) { 
+      print(paste0("Removed ", length(bad_subjects), " subjects who had Stroop scores less than ", score_threshold, ".")) 
+      cat("  \n---  \n  ") 
+    } 
+
+    anova_test <- aov(formula(paste(diff, "~ Condition")), data = anova_df) 
+    print(summary(anova_test)) 
+    cat("  \n---  \n\n  ") 
+    print(TukeyHSD(anova_test)) 
+  } 
+} 
+
+``` 
+
+\newpage 
+## Summary 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+comparison_levels <- c("WB - RB", "SC - RB", "SC - WB", "DT - RB", "DT - WB", "DT - SC", "P - RB", "P - WB", "P - SC", "P - DT") 
+kable(((t_test_df[ , !(names(t_test_df) %in% c("Name"))] 
+       %>% mutate(Difference = gsub(".", " - ", Difference, fixed = TRUE)))[, c(3, 1, 2, 4, 5, 6, 7)] %>% 
+        mutate(Difference = factor(Difference, levels = comparison_levels)) %>% arrange(Condition, Difference)), format = "latex", longtable = TRUE) %>% 
+  kable_styling(latex_options = c("hold_position", "striped", "repeat_header")) 
+``` 

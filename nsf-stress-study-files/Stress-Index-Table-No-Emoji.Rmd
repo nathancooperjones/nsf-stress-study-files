@@ -1,0 +1,303 @@
+---
+title: "Stress Index Table"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+## READ ME FIRST!! 
+## You will need to adjust paths for different files. Do a 'find' search for the comment with CHANGE THIS to find areas to change. 
+## I have done my best to comment all important blocks of code to ensure you know what they do. 
+## Enjoy the script and my attempt at humorous comments! 
+
+# CHANGE THIS 
+# Really nothing for you to change here, just wanted to let you know that if you didn't run `AllSignals.Rmd` first 
+# then this script WILL NOT WORK. Don't be foolish - just do it! 
+
+# Good libraries again - notice 'stringi' is for supporting emoji use. 
+library(tidyverse) 
+# install.packages("stringi") 
+library(stringi) 
+library(tidyr) 
+library(knitr) 
+library(kableExtra) 
+
+# CHANGE THIS 
+# Edit the path to the wonderful file you made in `AllSignals.Rmd`. You can do it! 
+full_df <- read_csv("@Datasets/full_df.csv", col_types = cols()) 
+# full_df <- read_csv("full_df.csv", col_types = cols()) 
+#full_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/nsf-stress-study-scripts/@Datasets/full_df.csv", col_types = cols()) 
+result_df <- tibble() 
+
+# I already covered this in `AllSignals.Rmd`. In the future, if I don't comment it, then assume it is either really simple or 
+# I already covered it. 
+isMatch <- function(pattern, str) { 
+  return(grepl(str, pattern)) 
+} 
+
+
+
+
+
+# We use that global tibble we read in to find subjects for us! 
+find_subjects <- function() { 
+  
+  # We process each subject individually of course. 
+  for (subj_name in levels(factor(full_df$Subject))) { 
+    
+    # We make a special dataframe for that subject alone! How special! 
+    df <- full_df %>% 
+      filter(Subject == subj_name) 
+    
+    tryCatch({ 
+
+      # We note the condition of the subject.       
+      condition <- df$Condition[1] 
+      # We filter only need measurement data that we can summarize with a mean value, so goodbye character values! 
+      # By the way, we can say goodbye to them because we already have what they could offer us as `subj_name` and `condition`. 
+      df <- df[ , !(names(df) %in% c("Subject", "Condition", "Task"))] 
+      
+      process_subject(df, subj_name, condition) 
+    }, warning = function(w) { 
+      message(paste0("Warnings present for subject ", subj_name, ": ", w, " Continuing process anyway.")) 
+      flush.console() 
+      return() 
+    }, error = function(e) { 
+      message(paste0("Error present for subject ", subj_name, ": ", e, " ")) 
+      flush.console() 
+      return() 
+    }) 
+
+  } 
+
+} 
+
+
+
+
+
+# Okay, time to work our magic here! 
+process_subject <- function(df, subj_name, condition) { 
+  
+  # First, we note the sessions and then factor our dataframe to show there is an order to the sessions! 
+  session_vec <- c("RestingBaseline", "BaselineWriting", "StressCondition", "DualTask", "Presentation") 
+  df$Session <- factor(df$Session, levels = session_vec) 
+  
+  # We need data to analyze! 
+  if (nrow(df) < 4) { 
+    message(paste0("Dataframe for subject ", subj_name, " is empty. ")) 
+    flush.console() 
+    return() 
+  } 
+
+  # We now compute the mean of every value for each session. We do this in a very fancy way that is way better than doing it 
+  # for each column individually! Take that loser! 
+  temp_df <- df %>% 
+    group_by(Session) %>% 
+    summarize_all(mean, na.rm = TRUE) 
+  
+  # I made another function because why not? It looks more impressive this way. 
+  add_another_row(session_dir, subj_name, subj_interface_file_name, condition, temp_df) 
+  
+} 
+
+
+
+
+
+# We add another row to the table printed out at the end. I know - creative naming! 
+add_another_row <- function(session_dir, subj_name, subj_interface_file_name, condition, temp_df) { 
+  
+  # Here is a sneak peak of the columns we will calculate results for. Shh, no telling! 
+  col_names <- c("PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR") 
+  # This `vec` variable will hold the row of each of the column results for this subject. It's a very important job! 
+  # but it's also lonely... 
+  # :( 
+  vec <- NULL 
+  
+  # We go through column by column. 
+  for (col in col_names) { 
+    
+    # We will store the order in this vector element, and we sill store emojis in it. We initialize it here for later. 
+    vec_elem <- NA 
+    
+    # We need to make sure that this subject actually has this measurement before we try to find the order of it... duh! 
+    if (col %in% names(temp_df)) { 
+      
+      # We sort the mean values of the subject in increasing order, then match the index positions of the sorted order 
+      # to figure out which signals are in what order. This line is confusing - make sure you know how it works! 
+      a <- match(sort(temp_df[[col]]), temp_df[[col]]) 
+      
+      # We make sure that `a` actually has something in it. 
+      # Fun fact: I named it `a` because I was too lazy to name it something more than `a`. 
+      if (length(a) != 0) { 
+        # We now paste the order of the emoji-vector based on the order of `a`,  which in itself is just the order of 
+        # mean values for the column. This is also kind of complicated - make sure this makes sense. Really think about it. 
+        vec_elem <- paste(emoji_vec[a], collapse="") 
+        
+        # This is the part where you put conditions to earn a check, marking this order as good or bad. 
+        
+        # # This code makes sure the entire order is as expected - if even one element is wrong, the whole thing is wrong. 
+        # # Note this is very, very strict. It doesn't lead to very good results. 
+        # if (identical(vec_elem, expected_result)) {
+        #   vec_elem <- paste(vec_elem, " O")
+        # } else {
+        #   vec_elem <- paste(vec_elem, " X")
+        # }
+        
+        # This just checks if the first element is correct. 
+        # If we only have one measurement, then it isn't correct. Sorry and goodbye! 
+        if (length(a) == 1) { 
+          vec_elem <- NA 
+        # If we have a "High Stress" subject, Resting Baseline (1) has to be first to be correct. 
+        } else if (a[1] == 1 & (condition == "IH" | condition == "BH")) { 
+          vec_elem <- paste(vec_elem, " O")  
+        # If we have a "Low Stress" subject, we will also accept Stress Condition (3) being the first element. 
+        } else if ((a[1] == 1 | a[1] == 3) & (condition == "IL" | condition == "BL")) { 
+          vec_elem <- paste(vec_elem, " O")  
+        # If you're reading this, then you are a failure. 
+        } else { 
+          vec_elem <- paste(vec_elem, " X") 
+        } 
+      } else { 
+        # The column doesn't exist for this subject, so we mark it as NA and move on! 
+        vec_elem <- NA 
+      } 
+    } 
+    
+    # We bind this vector element to the big vector that will hold them all! 
+    vec <- cbind(vec, vec_elem) 
+    
+  } 
+  
+  # Now we try to figure out what university the subject comes from based on its number! 
+  # What a neat hack! 
+  subj_number = as.integer(substring(subj_name, 2)) 
+  if (0 <= subj_number & subj_number <= 60) { 
+    group <- "UH" 
+  } else if (60 < subj_number & subj_number <= 120) { 
+    group <- "A&M" 
+  } else if (120 < subj_number & subj_number <= 180) { 
+    group <- "UCI" 
+  } else { 
+    group <- NA 
+  } 
+  
+  # We turn that vector into a dataframe and add some extra data, such as its group, subject, and condition. 
+  helper <- data.frame(Group = group, Subject = subj_name, Cnd. = condition, vec, stringsAsFactors=FALSE) 
+  
+  # We now bind that dataframe row to the grand, global tibble from the beginning. Remember that guy? 
+  result_df <<- rbind(result_df, helper) 
+  
+} 
+
+
+
+
+
+# By this point, we should have a full global tibble. Now let's make it look nice. 
+format_final_df <- function() { 
+  
+  # We change the column names of the final tibble. 
+  col_names_final <- c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR") 
+  names(result_df) <<- col_names_final 
+  
+  # We also adjust the order of the Group variable to something that makes sense, and then sort by it. 
+  result_df <<- result_df %>% 
+    mutate(Group = factor(Group, levels = c("IH", "BH", "IL", "BL"))) %>% arrange(Group) 
+  
+  # We now calculate the total amount of check marks (number correct) for each of the columns. 
+  # Yes, this one we couldn't do the special secret way like before. Bummer! 
+  totals <- result_df %>% 
+    summarize(sumPP = sum(grepl(" O", PP), na.rm = TRUE), 
+              sumHR = sum(grepl(" O", HR), na.rm = TRUE), 
+              sumBR = sum(grepl(" O", BR), na.rm = TRUE), 
+              sumD.EDA = sum(grepl(" O", D.EDA), na.rm = TRUE), 
+              sumD.HR = sum(grepl(" O", D.HR), na.rm = TRUE), 
+              sumN.EDA = sum(grepl(" O", N.EDA), na.rm = TRUE), 
+              sumN.HR = sum(grepl(" O", N.HR), na.rm = TRUE))  
+  
+  # This just counts the total number of non-NA valus in each column. 
+  counts <- apply(result_df, 2, function(x) length(which(!is.na(x)))) 
+  # We don't care about the count for University, Subject, or Group columns, so we kick those out. 
+  counts <- counts[-(1:3)] 
+  
+  # We now turn the totals vector that was full of integers into characters so we can do fancy things to them. 
+  tmp <- sapply(totals, as.character) 
+  
+  # We now combine the number correct and the total and seperate them with a /. Foolproof! 
+  TOTALS <- paste(tmp, counts, sep="/") 
+  # Now here's where it gets complicated: we have to do all these fancy things to the vector to turn it into a row of 
+  # the dataframe that allows us to row-bind it to the final one. This involves a billion things including transposing it 
+  # for some reason. I have no idea what this does anymore, so I leave it as a suggestion to the reader to figure it out. 
+  TOTALS <- sapply(TOTALS, as.character) 
+  TOTALS <- as.data.frame(TOTALS) 
+  TOTALS <- as.data.frame(t(TOTALS)) 
+  
+  # We definitely don't need values for these columns in the final total row. 
+  TOTALS$University = "......" 
+  TOTALS$Subject = "......." 
+  TOTALS$Group = "...." 
+  
+  # We make sure we have the same column names and same order so we can `rbind()` it correctly (A.K.A. without errors)! 
+  colnames(TOTALS) <- c("PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR", "University", "Subject", "Group") 
+  TOTALS <- TOTALS[c("University", "Subject", "Group", "PP", "HR", "BR", "D.EDA", "D.HR", "N.EDA", "N.HR")] 
+  result_df <<- rbind(result_df, TOTALS) 
+  
+} 
+
+```
+
+```{r echo = FALSE, warning = FALSE, message = FALSE} 
+# How many sessions do we want to list, all (5) or some (3)? 
+n <- 5 
+
+# Time to mess with emojis - DO NOT MODIFY OR ELSE THE ENTIRE SCRIPT WILL BREAK. 
+# IF YOU DO MODIFY, COPY AND PASTE IT IN PLACE BEFORE RUNNING (you'll be surprised how often this fixes the problem). 
+# RSTUDIO UNICODE IS WEIRD! 
+emoji_vec = c("R", "W", "B", "D",  "P") 
+if (n == 5) { 
+  emoji_vec = c("R", "W", "B", "D",  "P") 
+} else if (n == 3) { 
+  emoji_vec = c("R", "W", "D")
+} else { 
+  stop("Insufficient number n provided: it can only be 3 or 5. Try again, human.") 
+} 
+
+# So we are expecting our final result to just be each of the emojis in the order presented above. 
+# We only use this if we want to test that the ENTIRE ORDER is correct. 
+expected_result <- paste(emoji_vec,collapse="") 
+
+# And now, finally, we can sit back and relax. 
+find_subjects() 
+format_final_df() 
+
+# This is very fancy, and prints the table in a nice way that doesn't get messed up by variable-length column values. 
+result_df <- result_df %>% 
+  mutate(Group = factor(Group, levels = c("IH", "BH", "IL", "BL", "...."))) %>% 
+  arrange(Group) 
+
+levels(result_df$Group) <- c("IF", "BF", "IN", "BN", "....") 
+
+knitr::kable(result_df) %>% 
+  kable_styling(bootstrap_options = "striped", font_size = 10.21) 
+
+```
+
+<em>Last run: `r format(Sys.Date(), format="%B %d, %Y") `</em>  
+
+<hr> 
+
+Evaluating Criteria:  
+O: Groups `IF` and `BF` have `Resting Baseline` (R) as the lowest mean value.  
+O: Groups `BN` and `BN` have `Resting Baseline` (R) or `Break`(B) as the lowest mean value.  
+X: Above conditions NOT met. 
+  
+  
+Symbols:  
+R: `Resting Baseline`  
+W: `Single Task`  
+B: `Break`  
+D: `Dual Task`  
+P: `Presentation` 
