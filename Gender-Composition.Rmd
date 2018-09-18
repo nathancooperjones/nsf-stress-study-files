@@ -29,11 +29,15 @@ gender_df <- read_csv("@Datasets/survey-reports/Pre-SurveyExport.csv", col_types
 # gender_df <- read_csv("T:/Google Drive/University of Houston/CS - UH/@Research - CPL/@Projects/NsfStressDataCuration/survey-reports/Pre-SurveyExport.csv", col_types = cols())
 gender_df <- gender_df[, c(22, 23, 24, 25, 27, 29, 30, 19)] 
 names(gender_df) <- c("Subject", "Age", "Gender", "Nationality", "NativeLanguage", "EducationLevel", "Occupation", "City") 
-gender_df <- na.omit(gender_df) 
+
+# gender_df <- na.omit(gender_df)
+
 gender_df[gender_df$Gender == 1, "Gender"] <- "Male" 
 gender_df[gender_df$Gender == 2, "Gender"] <- "Female" 
 
-full_df <- merge(full_df, gender_df, by = "Subject") 
+full_df <- merge(full_df, gender_df, by = "Subject")
+
+
 
 result_df <- full_df[ , c("Subject", "Condition", "Session")] 
 result_df <- result_df[!duplicated(result_df$Subject), ] 
@@ -49,6 +53,8 @@ plot_gender <- function() {
       mutate(Condition = factor(Condition, levels = c("IH", "BH", "IL", "BL"))) %>% 
       mutate(Gender = factor(Gender, levels = c("Male", "Female"))) %>% 
       group_by(Condition) 
+  
+  message(new_df)
   
   levels(new_df$Condition) <- c("IF", "BF", "IN", "BN") 
   

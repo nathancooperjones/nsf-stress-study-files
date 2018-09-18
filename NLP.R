@@ -1,8 +1,8 @@
 # install.packages(c('devtools','curl'))
 # install.packages(c('coreNLP','curl'))
 # devtools::install_github("statsmaths/coreNLP")
-# install.packages('rJava')
-# install.packages('ngram')
+# install.packages('rJava', dependencies = T)
+# install.packages('ngram', dependencies = T)
 
 
 current_dir <- dirname(dirname(rstudioapi::getSourceEditorContext()$path)) 
